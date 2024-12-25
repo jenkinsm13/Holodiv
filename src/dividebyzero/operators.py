@@ -58,49 +58,42 @@ def elevate_dimension(reduced_data: np.ndarray,
                     noise_scale: float = 1e-6) -> np.ndarray:
     """
     Implement tensor network elevation as defined in Section 4 of the paper.
-    Uses DMRG-like approach with bond dimension control and error tracking.
+    Uses direct reconstruction with error preservation.
     """
     if np.prod(reduced_data.shape) > np.prod(target_shape):
         raise ValueError("Cannot elevate to lower dimensions")
     
-    # Reshape reduced data into MPS form
+    # Normalize input data
     reduced_flat = reduced_data.flatten()
-    target_size = np.prod(target_shape)
+    reduced_flat = reduced_flat / np.linalg.norm(reduced_flat)
     
-    # Create initial MPS tensor
-    mps = reduced_flat.reshape(-1, 1)
-    
-    # Create MPO from error matrix
+    # Create error operator
     error_flat = error.flatten()
-    bond_dim = int(np.sqrt(len(error_flat)))
-    error_mpo = error_flat.reshape(bond_dim, bond_dim)
+    error_size = int(np.sqrt(len(error_flat)))
+    error_matrix = error_flat.reshape(error_size, error_size)
     
-    # Perform SVD for bond dimension control
-    U, S, Vt = np.linalg.svd(mps, full_matrices=True)
+    # Create initial state matrix
+    state_matrix = np.zeros((error_size, error_size), dtype=np.complex128)
+    state_matrix[:len(reduced_flat), 0] = reduced_flat
     
-    # Truncate based on noise scale and target dimensions
-    rank = min(len(S), bond_dim)
-    U = U[:, :rank]
-    S = S[:rank]
-    Vt = Vt[:rank, :]
+    # Apply error operator
+    elevated = error_matrix @ state_matrix
     
-    # Apply error MPO with proper reshaping
-    elevated = U @ np.diag(S) @ Vt
-    elevated = elevated.reshape(-1, 1)
-    
-    # Project onto target space using error matrix
-    projection = error_mpo @ elevated
-    projection = projection.reshape(target_shape)
+    # Extract the result and normalize
+    result = elevated[:np.prod(target_shape), 0]
+    result = result / np.linalg.norm(result)
     
     # Add controlled noise to maintain quantum correlations
-    if projection.size < target_size:
-        noise = np.random.normal(0, noise_scale, target_shape)
-        projection = projection + noise
+    if len(result) < np.prod(target_shape):
+        padding = np.zeros(np.prod(target_shape) - len(result))
+        noise = np.random.normal(0, noise_scale, len(padding))
+        result = np.concatenate([result, padding + noise])
     
     # Ensure proper normalization
-    projection = projection / np.linalg.norm(projection)
+    result = result / np.linalg.norm(result)
     
-    return projection
+    # Reshape to target shape
+    return result.reshape(target_shape)
 
 def _elevate_tensor(reduced: np.ndarray, error: np.ndarray, target_shape: Tuple[int, ...], noise_scale: float = 1e-6) -> np.ndarray:
     """Reconstruct the original matrix from reduced matrix and error tensor."""
