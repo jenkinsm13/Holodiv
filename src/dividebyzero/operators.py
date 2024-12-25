@@ -4,6 +4,7 @@ import numpy as np
 from typing import Tuple, Optional, Dict
 from .exceptions import DimensionalError
 import logging
+from scipy.linalg import expm
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -58,42 +59,81 @@ def elevate_dimension(reduced_data: np.ndarray,
                     noise_scale: float = 1e-6) -> np.ndarray:
     """
     Implement tensor network elevation as defined in Section 4 of the paper.
-    Uses direct reconstruction with error preservation.
+    Uses quantum state reconstruction with entanglement preservation.
     """
+    # Validate input shapes
+    if not isinstance(reduced_data, np.ndarray) or not isinstance(error, np.ndarray):
+        raise ValueError("Both reduced_data and error must be numpy arrays")
+    
     if np.prod(reduced_data.shape) > np.prod(target_shape):
         raise ValueError("Cannot elevate to lower dimensions")
     
-    # Normalize input data
+    # Validate error matrix shape
+    error_flat = error.flatten()
+    error_size = int(np.sqrt(len(error_flat)))
+    if error_size * error_size != len(error_flat):
+        raise ValueError("Error matrix must be square when flattened")
+    
+    # Validate compatibility between reduced_data and error
+    if len(reduced_data.flatten()) * error_size != np.prod(target_shape):
+        raise ValueError("Incompatible shapes between reduced data and error matrix")
+    
+    # Normalize input data and convert to state vector
     reduced_flat = reduced_data.flatten()
     reduced_flat = reduced_flat / np.linalg.norm(reduced_flat)
     
-    # Create error operator
-    error_flat = error.flatten()
-    error_size = int(np.sqrt(len(error_flat)))
+    # Create density matrix from reduced state
+    rho = np.outer(reduced_flat, reduced_flat.conj())
+    
+    # Create error operator from error matrix
     error_matrix = error_flat.reshape(error_size, error_size)
     
-    # Create initial state matrix
-    state_matrix = np.zeros((error_size, error_size), dtype=np.complex128)
-    state_matrix[:len(reduced_flat), 0] = reduced_flat
+    # Ensure error matrix is square and matches target dimensions
+    if error_matrix.shape[0] != np.prod(target_shape):
+        # Pad or truncate error matrix
+        new_error = np.zeros((np.prod(target_shape), np.prod(target_shape)))
+        min_size = min(error_matrix.shape[0], new_error.shape[0])
+        new_error[:min_size, :min_size] = error_matrix[:min_size, :min_size]
+        error_matrix = new_error
     
-    # Apply error operator
-    elevated = error_matrix @ state_matrix
+    # Create unitary error operator
+    error_op = expm(1j * error_matrix)
     
-    # Extract the result and normalize
-    result = elevated[:np.prod(target_shape), 0]
-    result = result / np.linalg.norm(result)
+    # Pad density matrix if needed
+    if rho.shape[0] < error_op.shape[0]:
+        padded_rho = np.zeros_like(error_op)
+        padded_rho[:rho.shape[0], :rho.shape[1]] = rho
+        rho = padded_rho
     
-    # Add controlled noise to maintain quantum correlations
-    if len(result) < np.prod(target_shape):
-        padding = np.zeros(np.prod(target_shape) - len(result))
-        noise = np.random.normal(0, noise_scale, len(padding))
-        result = np.concatenate([result, padding + noise])
+    # Apply error operator to density matrix
+    rho_error = error_op @ rho @ error_op.conj().T
+    
+    # Ensure Hermiticity and positive semi-definiteness
+    rho_error = (rho_error + rho_error.conj().T) / 2
+    eigenvals, eigenvecs = np.linalg.eigh(rho_error)
+    eigenvals = np.maximum(eigenvals, 0)  # Ensure positivity
+    
+    # Sort eigenvalues and eigenvectors in descending order
+    idx = np.argsort(eigenvals)[::-1]
+    eigenvals = eigenvals[idx]
+    eigenvecs = eigenvecs[:, idx]
+    
+    # Add controlled quantum noise to maintain coherence
+    noise = np.random.normal(0, noise_scale, len(eigenvals))
+    eigenvals = eigenvals + noise
+    eigenvals = np.maximum(eigenvals, 0)  # Ensure positivity after noise
+    eigenvals = eigenvals / np.sum(eigenvals)  # Normalize
+    
+    # Reconstruct elevated state
+    elevated = np.zeros(np.prod(target_shape), dtype=np.complex128)
+    for i in range(len(eigenvals)):
+        elevated += np.sqrt(eigenvals[i]) * eigenvecs[:, i]
     
     # Ensure proper normalization
-    result = result / np.linalg.norm(result)
+    elevated = elevated / np.linalg.norm(elevated)
     
     # Reshape to target shape
-    return result.reshape(target_shape)
+    return elevated.reshape(target_shape)
 
 def _elevate_tensor(reduced: np.ndarray, error: np.ndarray, target_shape: Tuple[int, ...], noise_scale: float = 1e-6) -> np.ndarray:
     """Reconstruct the original matrix from reduced matrix and error tensor."""

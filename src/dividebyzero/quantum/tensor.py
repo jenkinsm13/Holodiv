@@ -213,87 +213,61 @@ class QuantumTensor:
     def _handle_division_by_zero(self, divisor: np.ndarray) -> 'QuantumTensor':
         """
         Implement DMRG-based dimensional reduction as defined in Section 4 of the paper.
-        Uses direct reconstruction with entanglement preservation.
+        Uses quantum state reconstruction with entanglement preservation.
         """
         if self.data.ndim == 0:
             raise DimensionalError("Cannot reduce dimensions of a scalar tensor")
         
-        # Convert to state vector representation
+        # Convert to state vector representation and normalize
         state_vector = self.data.flatten()
         state_vector = state_vector / np.linalg.norm(state_vector)
         
-        # For Bell states and maximally entangled states, preserve the bipartite structure
-        if len(self.physical_dims) == 2:
-            dim_a, dim_b = self.physical_dims
-            matrix = state_vector.reshape(dim_a, dim_b)
-            
-            # Create density matrix
-            rho = np.outer(state_vector, state_vector.conj())
-            rho_a = np.zeros((dim_a, dim_a), dtype=np.complex128)
-            
-            # Compute reduced density matrix via partial trace
-            for i in range(dim_b):
-                block = rho.reshape(dim_a, dim_b, dim_a, dim_b)[:, i, :, i]
-                rho_a += block
-            
-            # Compute eigendecomposition
-            eigenvalues, eigenvectors = np.linalg.eigh(rho_a)
-            idx = np.argsort(eigenvalues)[::-1]
-            eigenvalues = eigenvalues[idx]
-            eigenvectors = eigenvectors[:, idx]
-            
-            # Calculate entropy
-            nonzero_eigenvalues = eigenvalues[eigenvalues > 1e-12]
-            entropy = -np.sum(nonzero_eigenvalues * np.log2(nonzero_eigenvalues + 1e-12))
-            
-            # For Bell states, ensure maximal entanglement
-            if len(nonzero_eigenvalues) == 2 and np.allclose(nonzero_eigenvalues, [0.5, 0.5], atol=1e-6):
-                bond_dim = 2
-                S_normalized = np.array([0.5, 0.5])
-                entropy = 1.0  # log2(2)
-            else:
-                bond_dim = max(2, len(nonzero_eigenvalues))
-                S_normalized = eigenvalues[:bond_dim] / np.sum(eigenvalues[:bond_dim])
-            
-            # Reconstruct reduced state
-            result = np.zeros((dim_a, dim_b), dtype=np.complex128)
-            for i in range(bond_dim):
-                result += np.sqrt(eigenvalues[i]) * np.outer(eigenvectors[:, i], eigenvectors[:, i].conj())
-        else:
-            # General case: reshape into square matrix
-            dim = int(np.sqrt(len(state_vector)))
-            matrix = state_vector.reshape(dim, -1)
-            
-            # Perform SVD
-            U, S, Vt = np.linalg.svd(matrix, full_matrices=True)
-            
-            # Calculate entropy
-            S_squared = S**2
-            S_normalized = S_squared / np.sum(S_squared)
-            entropy = -np.sum(S_normalized * np.log2(S_normalized + 1e-12))
-            
-            # Determine bond dimension
-            bond_dim = max(2, int(np.exp(entropy)))
-            bond_dim = min(bond_dim, len(S))
-            
-            # Truncate and reconstruct
-            U = U[:, :bond_dim]
-            S = S[:bond_dim]
-            Vt = Vt[:bond_dim, :]
-            result = U @ np.diag(S) @ Vt
+        # Calculate optimal bond dimension based on entanglement
+        bond_dim = min(64, len(state_vector))  # Cap at reasonable size
         
-        # Normalize result
-        result = result / np.linalg.norm(result)
+        # Reshape into matrix for SVD
+        matrix_size = int(np.sqrt(len(state_vector)))
+        matrix = state_vector.reshape(matrix_size, -1)
+        
+        # Perform SVD for Schmidt decomposition
+        U, S, Vt = np.linalg.svd(matrix, full_matrices=False)
+        
+        # Calculate entanglement entropy
+        S_normalized = S / np.sum(S)
+        entropy = -np.sum(S_normalized * np.log2(S_normalized + 1e-12))
+        
+        # Determine optimal truncation based on entropy
+        truncation_idx = min(bond_dim, len(S))
+        for i in range(len(S)):
+            if np.sum(S[:i]**2) / np.sum(S**2) > 0.99:  # 99% of total weight
+                truncation_idx = min(bond_dim, i + 1)
+                break
+        
+        # Truncate and reconstruct
+        S_trunc = S[:truncation_idx]
+        U_trunc = U[:, :truncation_idx]
+        Vt_trunc = Vt[:truncation_idx, :]
+        
+        # Reconstruct reduced state
+        reduced_state = U_trunc @ np.diag(S_trunc) @ Vt_trunc
         
         # Update entanglement spectrum
         self._entanglement_spectrum = EntanglementSpectrum(
-            schmidt_values=S_normalized[:bond_dim],
+            schmidt_values=S_normalized[:truncation_idx],
             entropy=entropy,
-            bond_dimension=bond_dim,
-            truncation_error=1.0 - np.sum(S_normalized[:bond_dim])
+            bond_dimension=truncation_idx,
+            truncation_error=np.sum(S[truncation_idx:]**2) / np.sum(S**2) if len(S) > truncation_idx else 0.0
         )
         
-        return QuantumTensor(result, self.physical_dims[:2], self.quantum_nums)
+        # Create gauge-invariant result tensor
+        result_shape = (truncation_idx, truncation_idx)
+        result_data = reduced_state.reshape(result_shape)
+        
+        return QuantumTensor(
+            result_data,
+            physical_dims=tuple(range(len(result_shape))),
+            quantum_nums=self.quantum_nums
+        )
 
 class TensorNetwork:
     """

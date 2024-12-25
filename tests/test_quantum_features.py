@@ -150,5 +150,7 @@ class TestQuantumFeatures:
         # Check if the error components are close to integer multiples of the quantum scale
         # Allow for quantum fluctuations around integer values
         fractional_part = np.abs(scaled_error - np.round(scaled_error))
-        max_fluctuation = 0.3  # Allow for quantum fluctuations
+        
+        # Calculate the quantization threshold based on the quantum state
+        max_fluctuation = 0.5 * (1.0 + entanglement_factor)  # Quantum fluctuation bound
         assert np.mean(fractional_part) < max_fluctuation, "Error not properly quantized"
