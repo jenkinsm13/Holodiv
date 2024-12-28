@@ -14,16 +14,19 @@ from .tensor import (
     QuantumTensor,
     TensorNetwork,
     EntanglementSpectrum,
-    reduce_entanglement
+    reduce_entanglement,
 )
 from .gauge import (
     GaugeField,
     GaugeTransformation,
     parallel_transport,
-    compute_holonomy
+    compute_holonomy,
 )
-from .gauge_groups import SU2Group
+from .gauge_groups import SU2Group, SU3Group
 from .holonomy import HolonomyCalculator
+
+# Make QuantumTensor directly available as dbz.quantum.QuantumTensor
+QuantumTensor = QuantumTensor
 
 __all__ = [
     'QuantumTensor',
@@ -35,6 +38,7 @@ __all__ = [
     'parallel_transport',
     'compute_holonomy',
     'SU2Group',
+    'SU3Group',
     'HolonomyCalculator',
 ]
 

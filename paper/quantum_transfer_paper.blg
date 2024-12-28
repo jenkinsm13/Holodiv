@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: quantum_transfer_paper.aux
+The style file: unsrtnat.bst
+Database file #1: quantum_transfer_paper.bib
+You've used 4 entries,
+            2481 wiz_defined-function locations,
+            583 strings with 5118 characters,
+and the built_in function-call counts, 1558 in all, are:
+= -- 142
+> -- 58
+< -- 3
++ -- 24
+- -- 16
+* -- 121
+:= -- 245
+add.period$ -- 12
+call.type$ -- 4
+change.case$ -- 8
+chr.to.int$ -- 4
+cite$ -- 4
+duplicate$ -- 76
+empty$ -- 150
+format.name$ -- 24
+if$ -- 325
+int.to.chr$ -- 1
+int.to.str$ -- 5
+missing$ -- 4
+newline$ -- 28
+num.names$ -- 12
+pop$ -- 28
+preamble$ -- 1
+purify$ -- 4
+quote$ -- 0
+skip$ -- 46
+stack$ -- 0
+substring$ -- 102
+swap$ -- 8
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 28
+warning$ -- 0
+while$ -- 16
+width$ -- 0
+write$ -- 59

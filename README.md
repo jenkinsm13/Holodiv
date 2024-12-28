@@ -7,16 +7,16 @@ DivideByZero (`dividebyzero`) implements a novel mathematical framework that rec
 ## Core Mathematical Principles
 
 ### Dimensional Division Operator
-The framework defines division by zero through the dimensional reduction operator $$\oslash$$:
+The framework defines division by zero through the dimensional reduction operator $\oslash$:
 
-For tensor $$T \in \mathcal{D}_n$$:
+For tensor $T \in \mathcal{D}_n$:
 ```
 T ∅ 0 = π(T) + ε(T)
 ```
 Where:
-- $$\pi(T)$$: Projection to lower dimension
-- $$\epsilon(T)$$: Quantized error preservation
-- $$\mathcal{D}_n$$: n-dimensional tensor space
+- $\pi(T)$: Projection to lower dimension
+- $\epsilon(T)$: Quantized error preservation
+- $\mathcal{D}_n$: n-dimensional tensor space
 
 ### Installation
 
@@ -59,7 +59,7 @@ reconstructed = result.elevate()
 from dividebyzero.quantum import QuantumTensor
 
 # Create quantum-aware tensor
-q_tensor = QuantumTensor(data, physical_dims=(2, 2))
+q_tensor = QuantumTensor(data, physical_dims=(2, 2, 2))
 
 # Perform gauge-invariant reduction
 reduced = q_tensor.reduce_dimension(

@@ -8,7 +8,7 @@ This module implements sophisticated holonomy calculations including:
 """
 
 import numpy as np
-from typing import List, Tuple, Optional, Callable
+from typing import List, Tuple, Optional, Callable, Union
 from scipy.linalg import expm
 from .gauge_groups import GaugeGroup, SU2Group, SU3Group, U1Group
 
@@ -79,29 +79,48 @@ class HolonomyCalculator:
                 )
         return np.max(np.abs(F_μν))
         
-    def berry_phase(self, connection_func, loop):
+    def berry_phase(self, 
+                hamiltonian: Callable[[Tuple[float, ...]], np.ndarray],
+                loop: List[Union[float, Tuple[float, ...]]]) -> float:
         """
         Calculate Berry phase for a given loop in parameter space.
         
         Args:
-            connection_func: Function that returns the connection matrix for a given parameter
-            loop: List of parameter values defining the loop
+            hamiltonian: Function that returns the Hamiltonian matrix for given parameters
+            loop: List of parameter values defining the loop. Can be single floats or tuples.
         
         Returns:
-            Array representing the Berry phase(s)
+            Berry phase in units of π
         """
-        phase = 0
+        phase = 0.0
+        
+        # Convert single parameters to tuples if needed
+        loop = [(x,) if isinstance(x, (int, float)) else x for x in loop]
+        
+        # Compute eigenvectors at each point
         for i in range(len(loop)):
             t1, t2 = loop[i], loop[(i+1) % len(loop)]
-            connection = connection_func(t1)
-            delta_t = t2 - t1
-            phase += -1j * np.trace(connection * delta_t)
+            
+            # Get Hamiltonians at adjacent points
+            H1 = hamiltonian(t1)
+            H2 = hamiltonian(t2)
+            
+            # Compute eigenvectors (get ground state)
+            _, v1 = np.linalg.eigh(H1)
+            _, v2 = np.linalg.eigh(H2)
+            
+            # Compute overlap between adjacent states
+            overlap = np.vdot(v1[:, 0], v2[:, 0])
+            
+            # Compute the phase difference using the complex argument
+            local_phase = np.angle(overlap) / np.pi
+            
+            # Accumulate the phase
+            phase -= local_phase
         
-        # Ensure the phase is real and normalized
-        phase = np.real(phase) % (2 * np.pi)
-        
-        # Always return an array
-        return np.array([phase])
+        # Normalize to [-1, 1] range
+        phase = ((phase + 1) % 2) - 1
+        return phase
     
     def compute_chern_number(self,
                            berry_curvature: Callable[[float, float], float],

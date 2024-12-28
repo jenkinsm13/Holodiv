@@ -19,6 +19,25 @@ class GaugeGroup:
     dimension: int
     structure_constants: np.ndarray
     casimir_eigenvalue: float
+    
+    def create_symmetric_state(self) -> np.ndarray:
+        """Create a state that is symmetric under gauge transformations."""
+        # Initialize random state with correct dimensions
+        state = np.random.rand(self.dimension, self.dimension) + 1j * np.random.rand(self.dimension, self.dimension)
+        
+        # Make state Hermitian
+        state = 0.5 * (state + state.conj().T)
+        
+        # Project onto gauge-invariant subspace
+        for generator in self.generators:
+            # Compute the commutator [generator, state]
+            commutator = generator @ state - state @ generator
+            # Subtract the non-invariant part
+            state = state - 0.5 * commutator
+        
+        # Normalize the state
+        state = state / np.linalg.norm(state)
+        return state
 
 class SU2Group(GaugeGroup):
     """
@@ -87,22 +106,31 @@ class SU3Group(GaugeGroup):
         self.generators = self._create_gell_mann_matrices()
         
         # Structure constants (computed from commutators)
-        f_abc = np.zeros((8, 8, 8))
+        f_abc = np.zeros((8, 8, 8), dtype=complex)
         for a in range(8):
             for b in range(8):
                 for c in range(8):
-                    f_abc[a,b,c] = -2j * np.trace(
+                    # Compute commutator trace
+                    comm_trace = np.trace(
                         self.generators[a] @ (
                             self.generators[b] @ self.generators[c] -
                             self.generators[c] @ self.generators[b]
                         )
                     )
+                    # Structure constants are purely imaginary
+                    f_abc[a,b,c] = -2j * comm_trace
+        
+        # Take only the imaginary part for structure constants (they are purely imaginary)
+        f_abc_real = f_abc.imag
         
         super().__init__(
             dimension=3,
-            structure_constants=f_abc.real,
+            structure_constants=f_abc_real,
             casimir_eigenvalue=4/3  # For fundamental representation
         )
+        
+        # Store coupling constant for gauge field calculations
+        self.coupling = 1.0  # Default coupling strength
     
     def _create_gell_mann_matrices(self) -> np.ndarray:
         """Generate the eight Gell-Mann matrices."""
