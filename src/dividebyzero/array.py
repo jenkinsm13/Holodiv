@@ -107,18 +107,21 @@ class DimensionalArray:
             error = self.array - result[0]
         elif ndim == 1:
             # For 1D arrays, reduce to a single value
-            result = np.array([np.abs(self.array).mean()])
-            error = self.array - result[0]
+            mean_val = np.abs(self.array).mean()
+            result = np.array([mean_val])  # Reduce to scalar
+            error = self.array - mean_val
         else:
-            # For higher dimensions, use SVD
+            # For higher dimensions, use SVD and reduce rank
             reshaped = self.array.reshape(original_shape[0], -1)
             try:
                 U, S, Vt = np.linalg.svd(reshaped, full_matrices=False)
-                # Take only the first singular value and vector
-                result = U[:, 0] * S[0]
-                # Store the first right singular vector for reconstruction
+                # Use threshold-based truncation for singular values
+                threshold = 0.1 * S.max()  # 10% of max singular value
+                result = U[:, 0] * (S[0] if S[0] > threshold else threshold)
                 self._right_singular_vector = Vt[0, :]
-                error = self.array - np.outer(result, self._right_singular_vector).reshape(original_shape)
+                # Compute error using truncated reconstruction
+                reconstructed = np.outer(result, Vt[0, :]).reshape(original_shape)
+                error = self.array - reconstructed
             except np.linalg.LinAlgError:
                 raise DimensionalError("SVD failed during division by zero")
         
@@ -152,28 +155,35 @@ class DimensionalArray:
             else:
                 zero_division_value = 0
             result[mask] = zero_division_value
-        elif self.array.ndim == 2:
-            # For 2D arrays, perform row-wise or column-wise reduction
-            for i in range(self.array.shape[0]):
-                row_mask = mask[i, :]
-                if np.all(row_mask):
-                    # If entire row is divided by zero, use mean of the row
-                    result[i, row_mask] = self.array[i, :].mean()
-                elif np.any(row_mask):
-                    # If some elements in the row are divided by zero, use mean of non-zero elements
-                    non_zero_elements = self.array[i, ~row_mask]
-                    result[i, row_mask] = non_zero_elements.mean()
         else:
-            # For higher dimensions, extend the reduction strategy accordingly
-            # Implement tensor decomposition methods if necessary
-            raise NotImplementedError("Partial division by zero not implemented for ndim > 2.")
+            # For higher dimensions, handle each slice along the last axis
+            # Reshape to handle broadcasting
+            broadcast_shape = np.broadcast_shapes(self.array.shape, mask.shape)
+            expanded_mask = np.broadcast_to(mask, broadcast_shape)
+            
+            # Iterate over all but the last axis
+            it = np.nditer(result[..., 0], flags=['multi_index'])
+            for _ in it:
+                idx = it.multi_index
+                # Get the slice for this index
+                slice_mask = expanded_mask[idx]
+                if np.any(slice_mask):
+                    slice_data = self.array[idx]
+                    non_zero_slice = slice_data[~slice_mask]
+                    if non_zero_slice.size > 0:
+                        zero_division_value = non_zero_slice.mean()
+                    else:
+                        zero_division_value = 0
+                    result[idx][slice_mask] = zero_division_value
         
-        error_tensor = np.where(mask, self.array - result, 0)
-        error_id = self.error_registry.store(ErrorData(
+        # Store error information
+        error_data = ErrorData(
             original_shape=self.array.shape,
-            error_tensor=error_tensor,
+            error_tensor=self.array - result,
             reduction_type='partial'
-        ))
+        )
+        error_id = self.error_registry.store(error_data)
+        
         reduced = DimensionalArray(result, self.error_registry)
         reduced._error_id = error_id
         return reduced
@@ -223,9 +233,15 @@ class DimensionalArray:
         if self.array.size == 1:  # scalar case
             reconstructed = np.full(error_data.original_shape, self.array[0])
         elif self.array.ndim == 1 and self._right_singular_vector is not None:
-            reconstructed = np.outer(self.array, self._right_singular_vector).reshape(error_data.original_shape)
+            # Reconstruct matrix from vector using outer product
+            reconstructed = np.outer(self.array, self._right_singular_vector)
+            reconstructed = reconstructed.reshape(error_data.original_shape)
         else:
-            reconstructed = self.array.reshape(error_data.original_shape)
+            # For other cases, reshape and broadcast
+            reconstructed = np.broadcast_to(
+                self.array.reshape(*self.array.shape, 1),
+                error_data.original_shape
+            )
             
         result = reconstructed + error_data.error_tensor * noise
         return DimensionalArray(result, self.error_registry)
@@ -509,14 +525,62 @@ class DimensionalArray:
                 return obj.array
             return obj
 
+        # Track error info from inputs
+        error_id = None
+        error_registry = self.error_registry
+        for input_arg in inputs:
+            if isinstance(input_arg, DimensionalArray) and input_arg._error_id is not None:
+                error_id = input_arg._error_id
+                error_registry = input_arg.error_registry
+                break
+
         inputs = tuple(convert_to_array(x) for x in inputs)
         result = getattr(ufunc, method)(*inputs, **kwargs)
 
         if isinstance(result, np.ndarray):
-            return DimensionalArray(result, self.error_registry)
+            da_result = DimensionalArray(result, error_registry)
+            if error_id is not None:
+                da_result._error_id = error_id
+            return da_result
         elif isinstance(result, tuple):
-            return tuple(DimensionalArray(x, self.error_registry) if isinstance(x, np.ndarray) else x for x in result)
+            return tuple(
+                DimensionalArray(x, error_registry) if isinstance(x, np.ndarray) else x 
+                for x in result
+            )
         return result
+
+    def __mod__(self, other: Union[int, float, 'DimensionalArray']) -> 'DimensionalArray':
+        """Implements modulo operation (%) for DimensionalArray"""
+        if isinstance(other, DimensionalArray):
+            return self - (self / other).floor() * other
+        return self - (self / other).floor() * other
+
+    def __rmod__(self, other: Union[int, float]) -> 'DimensionalArray':
+        """Implements right-hand modulo operation for DimensionalArray"""
+        return other - (other / self).floor() * self
+
+    def __floordiv__(self, other: Union[int, float, 'DimensionalArray']) -> 'DimensionalArray':
+        """Implements floor division (//) for DimensionalArray"""
+        if isinstance(other, DimensionalArray):
+            return (self / other).floor()
+        return (self / other).floor()
+
+    def __rfloordiv__(self, other: Union[int, float]) -> 'DimensionalArray':
+        """Implements right-hand floor division (//) for DimensionalArray"""
+        return (other / self).floor()
+
+    def floor(self) -> 'DimensionalArray':
+        """Return the floor of the input, element-wise."""
+        return DimensionalArray(np.floor(self.array), self.error_registry)
+
+    def remainder(self, other: Union[int, float, 'DimensionalArray']) -> 'DimensionalArray':
+        """Return element-wise remainder of division.
+        
+        Computes the remainder complementary to the __floordiv__ quotient.
+        Result has the same sign as the divisor."""
+        if isinstance(other, DimensionalArray):
+            return DimensionalArray(np.remainder(self.array, other.array), self.error_registry)
+        return DimensionalArray(np.remainder(self.array, other), self.error_registry)
 
 def array(array_like: Any, dtype: Any = None, error_registry: Optional[ErrorRegistry] = None) -> DimensionalArray:
     """
@@ -530,4 +594,5 @@ def array(array_like: Any, dtype: Any = None, error_registry: Optional[ErrorRegi
     Returns:
         DimensionalArray: A new array instance
     """
+    return DimensionalArray(array_like, error_registry=error_registry, dtype=dtype)
     return DimensionalArray(array_like, error_registry=error_registry, dtype=dtype)

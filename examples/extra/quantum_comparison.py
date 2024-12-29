@@ -1,4 +1,4 @@
-import numpy as np
+import dividebyzero as dbz
 import qutip as qt
 import matplotlib.pyplot as plt
 from dividebyzero.quantum import QuantumTensor
@@ -11,20 +11,20 @@ def create_qutip_hamiltonian(t):
     """Create the Hamiltonian using QuTiP."""
     if isinstance(t, tuple):
         t = t[0]
-    H = np.array([[t, EPSILON], [EPSILON, -t]])
+    H = dbz.array([[t, EPSILON], [EPSILON, -t]])
     return qt.Qobj(H)
 
 def create_dividebyzero_hamiltonian(t):
     """Create the Hamiltonian using dividebyzero."""
     if isinstance(t, tuple):
         t = t[0]
-    H = np.array([[t, EPSILON], [EPSILON, -t]])
+    H = dbz.array([[t, EPSILON], [EPSILON, -t]])
     return QuantumTensor(H)
 
 def qutip_evolution(t_values):
     """Evolve the system using QuTiP's master equation solver."""
     # Initial state
-    psi0 = qt.Qobj(np.array([1/np.sqrt(2), 1/np.sqrt(2)]))
+    psi0 = qt.Qobj(dbz.array([1/dbz.sqrt(2), 1/dbz.sqrt(2)]))
     
     # Time-dependent Hamiltonian
     H = [create_qutip_hamiltonian(t) for t in t_values]
@@ -49,7 +49,7 @@ def qutip_evolution(t_values):
 def dividebyzero_evolution(t_values):
     """Evolve the system using dividebyzero's holonomy approach."""
     # Initial state
-    psi0 = QuantumTensor(np.array([1/np.sqrt(2), 1/np.sqrt(2)]))
+    psi0 = QuantumTensor(dbz.array([1/dbz.sqrt(2), 1/dbz.sqrt(2)]))
     
     # Initialize holonomy calculator
     gauge_group = U1Group()
@@ -66,22 +66,22 @@ def dividebyzero_evolution(t_values):
         num_points = 8  # More points for smoother loop
         
         # Create a circular loop in parameter space
-        theta = np.linspace(0, 2*np.pi, num_points)
-        loop = [(t + radius*np.cos(th), radius*np.sin(th)) for th in theta]
+        theta = dbz.linspace(0, 2*dbz.pi, num_points)
+        loop = [(t + radius*dbz.cos(th), radius*dbz.sin(th)) for th in theta]
         
         # Define the Hamiltonian function for the loop
         def H_loop(params):
             t_val, eps = params
-            H = np.array([[t_val, eps], [eps, -t_val]])
+            H = dbz.array([[t_val, eps], [eps, -t_val]])
             return H
         
         # Calculate Berry phase
         phase = holonomy_calc.berry_phase(H_loop, loop)
         
         # Construct evolution operator
-        U = np.array([
-            [np.exp(1j * phase), 0],
-            [0, np.exp(-1j * phase)]
+        U = dbz.array([
+            [dbz.exp(1j * phase), 0],
+            [0, dbz.exp(-1j * phase)]
         ])
         
         # Ensure current state is a column vector
@@ -93,14 +93,14 @@ def dividebyzero_evolution(t_values):
         current_state = QuantumTensor(evolved_data)
         
         # Calculate survival probability
-        overlap = np.abs(np.vdot(psi0.data.flatten(), current_state.data.flatten()))**2
+        overlap = dbz.abs(dbz.vdot(psi0.data.flatten(), current_state.data.flatten()))**2
         probs.append(overlap)
     
     return probs
 
 def main():
     # Use more points and larger range for better resolution
-    t_values = np.linspace(-1.0, 1.0, 100)
+    t_values = dbz.linspace(-1.0, 1.0, 100)
     
     # Compare both methods
     qutip_probs = qutip_evolution(t_values)

@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import dividebyzero as dbz
 from dividebyzero.quantum.tensor import QuantumTensor
 import seaborn as sns
-from scipy.linalg import logm
+import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 def create_density_matrix(state_vector):
     """Create density matrix from state vector."""
@@ -106,6 +107,7 @@ def plot_entanglement_spectrum(original, divided, title):
     plt.xlabel("Index")
     
     plt.tight_layout()
+    plt.show()
 
 plot_entanglement_spectrum(ghz, ghz_divided, "GHZ State")
 plot_entanglement_spectrum(w, w_divided, "W State")
@@ -113,15 +115,39 @@ plot_entanglement_spectrum(w, w_divided, "W State")
 # Analyze quantum correlations
 def compute_mutual_information(rho, subsys_dims):
     """Compute quantum mutual information between subsystems."""
-    n = len(subsys_dims)
+    n = len(subsys_dims)  # number of qubits
     mutual_info = dbz.zeros((n, n))
+    
+    # Determine actual number of qubits from matrix dimension
+    matrix_dim = rho.shape[0]
+    actual_n = int(dbz.log2(matrix_dim))  # log base 2 of matrix dimension
+    
+    def compute_reduced_density_matrix(rho, trace_out_qubit):
+        # Reshape into appropriate tensor product form
+        reshaped = rho.reshape([2] * actual_n + [2] * actual_n)
+        # Trace out the specified qubit
+        reduced = dbz.trace(reshaped, axis1=trace_out_qubit, axis2=trace_out_qubit + actual_n)
+        # Reshape back to a square matrix
+        return reduced.reshape(2**(actual_n-1), 2**(actual_n-1))
     
     for i in range(n):
         for j in range(i+1, n):
+            if i >= actual_n or j >= actual_n:
+                # Skip pairs involving qubits that don't exist in reduced state
+                mutual_info[i,j] = 0
+                mutual_info[j,i] = 0
+                continue
+                
             # Compute reduced density matrices
-            rho_i = dbz.trace(rho.reshape(subsys_dims[i], -1), axis=1)
-            rho_j = dbz.trace(rho.reshape(subsys_dims[j], -1), axis=1)
-            rho_ij = dbz.trace(rho.reshape(subsys_dims[i]*subsys_dims[j], -1), axis=1)
+            rho_i = compute_reduced_density_matrix(rho, i)
+            rho_j = compute_reduced_density_matrix(rho, j)
+            
+            # For rho_ij, we need to trace out all qubits except i and j
+            rho_ij = rho.reshape([2] * actual_n + [2] * actual_n)
+            for k in range(actual_n):
+                if k != i and k != j:
+                    rho_ij = dbz.trace(rho_ij, axis1=k, axis2=k + actual_n)
+            rho_ij = rho_ij.reshape(2**min(2, actual_n), 2**min(2, actual_n))  # Handle reduced cases
             
             # Compute von Neumann entropies
             S_i = -dbz.trace(rho_i @ dbz.logm(rho_i)).real
@@ -156,7 +182,7 @@ sns.heatmap(mi_w_div, ax=axes[1,1], cmap='viridis')
 axes[1,1].set_title("W State - After Division MI")
 
 plt.tight_layout()
-
+plt.show()
 # Print summary statistics
 print("\n=== Summary Statistics ===")
 print("GHZ State:")

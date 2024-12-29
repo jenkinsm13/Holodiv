@@ -167,12 +167,12 @@ class SU3Group(GaugeGroup):
             Second Chern number (topological invariant)
         """
         # Compute εμνρσ Tr[F_μν F_ρσ]
-        chern_density = np.einsum('ijkl,abij,cdkl->abcd',
+        chern_density = np.einsum('ijkl,abij,cdkl->',
                                 volume_element,
                                 field_strength,
                                 field_strength)
         
-        return np.trace(chern_density) / (32 * np.pi**2)
+        return chern_density / (32 * np.pi**2)
 
 class U1Group(GaugeGroup):
     """

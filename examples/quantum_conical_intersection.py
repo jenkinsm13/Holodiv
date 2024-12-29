@@ -3,6 +3,7 @@ import dividebyzero as dbz
 from dividebyzero.quantum import QuantumTensor
 from dividebyzero.quantum.holonomy import HolonomyCalculator
 from dividebyzero.quantum.gauge_groups import U1Group
+from dividebyzero.constants import newaxis
 import logging
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
@@ -158,12 +159,12 @@ def main():
         # Traditional evolution
         trad_states = traditional_evolution(t_values, x, y)
         # Normalize states
-        trad_states = trad_states / dbz.sqrt(dbz.sum(dbz.abs(trad_states)**2, axis=1))[:, dbz.newaxis]
+        trad_states = trad_states / dbz.sqrt(dbz.sum(dbz.abs(trad_states)**2, axis=1))[:, newaxis]
         
         # Holonomy evolution
         holo_states = quantum_holonomy_evolution(t_values, x, y)
         # Normalize states
-        holo_states = holo_states / dbz.sqrt(dbz.sum(dbz.abs(holo_states)**2, axis=1))[:, dbz.newaxis]
+        holo_states = holo_states / dbz.sqrt(dbz.sum(dbz.abs(holo_states)**2, axis=1))[:, newaxis]
         
         # Plot results
         plot_results(t_values, trad_states, holo_states, x, y)

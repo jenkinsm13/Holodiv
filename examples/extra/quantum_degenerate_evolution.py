@@ -1,5 +1,5 @@
-import numpy as np
-from dividebyzero import QuantumTensor
+import dividebyzero as dbz
+from dividebyzero.quantum import QuantumTensor
 from dividebyzero.quantum.holonomy import HolonomyCalculator
 from dividebyzero.quantum.gauge_groups import U1Group
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ def create_hamiltonian(t, epsilon=1e-6):
     # Handle tuple input by taking first element
     if isinstance(t, tuple):
         t = t[0]
-    H = np.array([
+    H = dbz.array([
         [t, epsilon],
         [epsilon, -t]
     ])
@@ -24,7 +24,7 @@ def traditional_evolution(t_values, psi0):
     for t in t_values:
         H = create_hamiltonian(t)
         # Simple Euler integration
-        U = np.eye(2) - 1j * H.data * dt
+        U = dbz.eye(2) - 1j * H.data * dt
         current_state = QuantumTensor(U @ current_state.data)
         states.append(current_state)
     
@@ -53,9 +53,9 @@ def quantum_holonomy_evolution(t_values, psi0, epsilon=1e-6):
         )
         
         # Construct evolution operator
-        U = np.array([
-            [np.exp(1j * phase), epsilon],
-            [epsilon, np.exp(-1j * phase)]
+        U = dbz.array([
+            [dbz.exp(1j * phase), epsilon],
+            [epsilon, dbz.exp(-1j * phase)]
         ])
         
         # Ensure current_state.data is a column vector
@@ -75,15 +75,15 @@ def compute_survival_probability(states):
     probabilities = []
     
     for state in states:
-        overlap = np.abs(np.vdot(initial_state.data.flatten(), state.data.flatten()))**2
+        overlap = dbz.abs(dbz.vdot(initial_state.data.flatten(), state.data.flatten()))**2
         probabilities.append(overlap)
     
     return probabilities
 
 def main():
     # Set up parameters
-    t_values = np.linspace(-1, 1, 50)
-    psi0 = QuantumTensor(np.array([1/np.sqrt(2), 1/np.sqrt(2)]))  # Initial superposition state
+    t_values = dbz.linspace(-1, 1, 50)
+    psi0 = QuantumTensor(dbz.array([1/dbz.sqrt(2), 1/dbz.sqrt(2)]))  # Initial superposition state
     
     # Evolve using both methods
     traditional_states = traditional_evolution(t_values, psi0)

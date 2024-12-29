@@ -1,5 +1,7 @@
 import numpy as np
+from scipy.linalg import logm as scipy_logm
 from .array import DimensionalArray
+from .exceptions import DimensionalError
 
 def svd(a, full_matrices=True, compute_uv=True, hermitian=False):
     """
@@ -90,7 +92,7 @@ def eigvals(a):
 
 def logm(a):
     """
-    Compute matrix logarithm.
+    Compute matrix logarithm using dimensional division framework for singular matrices.
     
     Parameters
     ----------
@@ -105,4 +107,41 @@ def logm(a):
     if isinstance(a, DimensionalArray):
         a = a.array
     
-    return DimensionalArray(np.linalg.logm(a))
+    # Convert to numpy array if needed
+    a = np.asarray(a)
+    
+    # Check if matrix is singular by computing eigenvalues
+    eigvals = np.linalg.eigvals(a)
+    min_eigval = np.min(np.abs(eigvals))
+    
+    # If matrix is well-conditioned, use standard logm
+    if min_eigval > 1e-10:
+        return DimensionalArray(scipy_logm(a))
+    
+    # For singular or near-singular matrices, use dimensional division
+    # Compute SVD for dimensional reduction
+    U, s, Vh = np.linalg.svd(a)
+    
+    # Find significant singular values
+    threshold = np.max(s) * 1e-10
+    significant = s > threshold
+    
+    # Project onto non-singular subspace (π(A))
+    s_filtered = s.copy()
+    s_filtered[~significant] = threshold  # Replace small values with threshold
+    
+    # Reconstruct filtered matrix
+    a_filtered = U @ np.diag(s_filtered) @ Vh
+    
+    # Compute log(π(A))
+    log_projected = scipy_logm(a_filtered)
+    
+    # Compute correction term log(1 + ε(A)/π(A)) ≈ ε(A)/π(A)
+    # Note: We use first-order approximation since ε(A)/π(A) is small
+    error_term = a - a_filtered
+    correction = error_term @ np.linalg.inv(a_filtered)
+    
+    # Final result: log(π(A)) + log(1 + ε(A)/π(A))
+    result = log_projected + correction
+    
+    return DimensionalArray(result)

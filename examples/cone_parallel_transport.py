@@ -129,7 +129,7 @@ def main():
     # Create a path that circles the cone
     n_points = 50
     theta = dbz.linspace(0, 2*dbz.pi, n_points)
-    r = dbz.ones_like(theta) * 0.2  # Closer to tip
+    r = dbz.ones_like(theta) * 0.9  # Closer to tip
     
     # Initial vector
     initial_vector = dbz.array([1.0, 0.0])  # Radial direction

@@ -1,4 +1,3 @@
-import numpy as np
 import dividebyzero as dbz
 from dividebyzero.quantum import QuantumTensor
 from dividebyzero.quantum.holonomy import HolonomyCalculator
@@ -11,7 +10,7 @@ def create_hamiltonian(t, epsilon=1e-6):
     At t=0, the system becomes degenerate (traditional methods fail).
     """
     # Create a Hamiltonian that becomes degenerate at t=0
-    H = np.array([
+    H = dbz.array([
         [t, epsilon],
         [epsilon, -t]
     ])
@@ -25,13 +24,13 @@ def traditional_berry_phase(t_values):
     for t in t_values:
         try:
             H = create_hamiltonian(t).data
-            eigenvals, eigenvecs = np.linalg.eigh(H)
+            eigenvals, eigenvecs = dbz.linalg.eigh(H)
             # This will fail at t=0 due to degeneracy
-            phase = np.angle(eigenvecs[0, 0])
+            phase = dbz.angle(eigenvecs[0, 0])
             phases.append(phase)
-        except np.linalg.LinAlgError:
-            phases.append(np.nan)
-    return np.array(phases)
+        except dbz.linalg.LinAlgError:
+            phases.append(dbz.nan)
+    return dbz.array(phases)
 
 def quantum_holonomy_through_singularity(t_values):
     """
@@ -62,11 +61,11 @@ def quantum_holonomy_through_singularity(t_values):
         )
         holonomies.append(phase)
     
-    return np.array(holonomies)
+    return dbz.array(holonomies)
 
 def main():
     # Create a range of t values including the singular point at t=0
-    t_values = np.linspace(-2, 2, 1000)
+    t_values = dbz.linspace(-2, 2, 1000)
     
     # Compare traditional vs quantum holonomy methods
     traditional_phases = traditional_berry_phase(t_values)

@@ -298,20 +298,30 @@ class TestDimensionalArray:
     def test_partial_division_higher_dims(self):
         """Test partial division by zero with higher dimensional arrays."""
         # Test 3D array division
-        arr = array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        arr = array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])  # Shape (2, 2, 2)
         divisor = array([[[0, 2], [3, 0]], [[5, 0], [0, 8]]])
+        result = arr / divisor
         
-        # This should raise NotImplementedError for ndim > 2
-        with pytest.raises(NotImplementedError):
-            result = arr / divisor
+        # Check shape preservation
+        assert result.shape == arr.shape
         
-        # Test 2D array with all-zero row
-        arr_2d = array([[1, 2], [3, 4]])
-        div_2d = array([[0, 0], [1, 2]])
-        result = arr_2d / div_2d
+        # Check non-zero divisions are correct
+        assert np.isclose(result.array[0, 0, 1], 1.0)  # 2/2
+        assert np.isclose(result.array[0, 1, 0], 1.0)  # 3/3
+        assert np.isclose(result.array[1, 0, 0], 1.0)  # 5/5
+        assert np.isclose(result.array[1, 1, 1], 1.0)  # 8/8
         
-        # Check that the all-zero row was handled by mean reduction
-        assert np.isclose(result.array[0, 0], result.array[0, 1])  # Should be same value for zero-row
+        # Test reconstruction
+        elevated = result.elevate()
+        assert elevated.shape == arr.shape
+        
+        # Check information preservation for non-zero elements
+        non_zero_mask = divisor.array != 0
+        assert np.allclose(
+            elevated.array[non_zero_mask],
+            arr.array[non_zero_mask] / divisor.array[non_zero_mask],
+            rtol=0.1
+        )
 
     def test_broadcasting(self):
         """Test array broadcasting operations."""
@@ -375,11 +385,17 @@ class TestDimensionalArray:
         result = arr / divisor
         assert result.shape == (2, 2)
         
-        # Test error for higher dimensions
-        arr_3d = array([[[1]]])
-        divisor_3d = array([[[0]]])
-        with pytest.raises(NotImplementedError):
-            arr_3d / divisor_3d
+        # Test 3D array with all zeros in one slice
+        arr_3d = array([[[1, 2], [3, 4]], [[0, 0], [0, 0]]])
+        divisor_3d = array([[[1, 1], [1, 1]], [[0, 0], [0, 0]]])
+        result = arr_3d / divisor_3d
+        assert result.shape == (2, 2, 2)
+        
+        # Test reconstruction
+        elevated = result.elevate()
+        assert elevated.shape == arr_3d.shape
+        # Check information preservation in non-zero slice
+        assert np.allclose(elevated.array[0], arr_3d.array[0], rtol=0.1)
 
     def test_elevation_methods(self):
         """Test elevation with different shapes and noise scales."""

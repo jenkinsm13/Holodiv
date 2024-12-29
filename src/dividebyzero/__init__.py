@@ -11,6 +11,7 @@ from .numpy_registry import _numpy_functions  # Import registered functions
 from . import quantum
 from . import linalg
 from . import random
+from .linalg import logm
 
 # Create a module-level registry
 _REGISTRY = ErrorRegistry()
@@ -20,6 +21,9 @@ pi = np.pi
 e = np.e
 inf = np.inf
 nan = np.nan
+
+# Add newaxis attribute
+newaxis = None
 
 # Add commonly used functions
 zeros = lambda *args, **kwargs: array(np.zeros(*args, **kwargs))
@@ -56,8 +60,8 @@ base_exports = [
     'DimensionalArray', 'ErrorRegistry', 'ErrorData',
     'DimensionalError', 'ReconstructionError',
     'get_registry', 'quantum', 'linalg', 'random',
-    'pi', 'e', 'inf', 'nan',
-    'sin', 'cos', 'tan', 'exp', 'log', 'sqrt',
+    'pi', 'e', 'inf', 'nan', 'newaxis',
+    'sin', 'cos', 'tan', 'exp', 'log', 'sqrt', 'logm',
     'linspace', 'arange', 'abs'
 ]
 
