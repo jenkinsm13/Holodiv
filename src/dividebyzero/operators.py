@@ -7,7 +7,8 @@ import logging
 from scipy.linalg import expm
 from .quantum.tensor import EntanglementSpectrum, QuantumTensor
 
-logging.basicConfig(level=logging.DEBUG)
+# Instead, create a module-level logger
+logger = logging.getLogger(__name__)
 
 def reduce_dimension(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Reduce dimension of input data."""

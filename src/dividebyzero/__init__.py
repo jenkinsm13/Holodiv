@@ -12,6 +12,7 @@ from . import quantum
 from . import linalg
 from . import random
 from .linalg import logm
+import logging
 
 # Create a module-level registry
 _REGISTRY = ErrorRegistry()
@@ -66,3 +67,19 @@ base_exports = [
 ]
 
 __all__ = base_exports + [name for name in _numpy_functions if name not in base_exports]
+
+def set_log_level(level):
+    """
+    Set the logging level for the entire dividebyzero library.
+    
+    Args:
+        level: The logging level to set. Can be a string ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+               or a corresponding integer value.
+    """
+    logger = logging.getLogger('dividebyzero')
+    logger.setLevel(level)
+    for handler in logger.handlers:
+        handler.setLevel(level)
+
+# Set default logging level to WARNING
+set_log_level(logging.WARNING)

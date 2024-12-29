@@ -15,7 +15,8 @@ from scipy.linalg import expm
 from ..exceptions import DimensionalError
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+# Instead, create a module-level logger
+logger = logging.getLogger(__name__)
 
 ENTANGLEMENT_CUTOFF = 1e-5  # Default cutoff value for entanglement reduction
 
@@ -100,7 +101,7 @@ class QuantumTensor:
         """
         Reduce tensor dimensions while preserving quantum properties.
         """
-        logging.debug(f"Reducing dimension with target_dims: {target_dims}, preserve_entanglement: {preserve_entanglement}")
+        logger.debug(f"Reducing dimension with target_dims: {target_dims}, preserve_entanglement: {preserve_entanglement}")
         if self.data.ndim <= target_dims:
             raise DimensionalError("Cannot reduce to higher or equal number of dimensions.")
 
@@ -110,7 +111,7 @@ class QuantumTensor:
             if iteration >= max_iterations:
                 raise RuntimeError(f"Failed to reduce dimensions after {max_iterations} iterations")
             
-            logging.debug(f"Iteration {iteration}: current ndim = {current_tensor.data.ndim}")
+            logger.debug(f"Iteration {iteration}: current ndim = {current_tensor.data.ndim}")
             cut_index = current_tensor.data.ndim - 1
             left, right = current_tensor.schmidt_decompose(cut_index)
             
@@ -141,7 +142,7 @@ class QuantumTensor:
             )
             
             if new_tensor.data.ndim >= current_tensor.data.ndim:
-                logging.warning(f"Failed to reduce dimensions at iteration {iteration}")
+                logger.warning(f"Failed to reduce dimensions at iteration {iteration}")
                 break
             
             current_tensor = new_tensor
@@ -164,19 +165,19 @@ class QuantumTensor:
             truncation_error=np.sum(s[target_dims:]**2) if len(s) > target_dims else 0.0
         )
 
-        logging.debug(f"Final reduced tensor shape: {current_tensor.data.shape}")
+        logger.debug(f"Final reduced tensor shape: {current_tensor.data.shape}")
         return current_tensor
     
     def elevate(self, target_shape: Optional[Tuple[int, ...]] = None, noise_scale: float = 1e-6) -> 'QuantumTensor':
         """Reconstruct higher dimensional representation."""
-        logging.debug(f"Elevating with target_shape: {target_shape}, noise_scale: {noise_scale}")
+        logger.debug(f"Elevating with target_shape: {target_shape}, noise_scale: {noise_scale}")
         if not self._entanglement_spectrum:
             raise ValueError("No entanglement spectrum available for elevation")
         
         # Use entanglement spectrum for elevation
         noise = np.random.normal(scale=noise_scale, size=self.data.shape)
         elevated_data = self.data + noise
-        logging.debug(f"Elevated data: {elevated_data}")
+        logger.debug(f"Elevated data: {elevated_data}")
         
         return QuantumTensor(elevated_data, self.physical_dims, self.quantum_nums)
     
