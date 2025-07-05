@@ -92,7 +92,7 @@ class DimensionalArray:
             result[non_zero_mask] = other / self.array[non_zero_mask]
             # For zero elements, use dimensional reduction
             if np.any(mask):
-                reduced = self._partial_divide_by_zero(mask)
+                reduced = self._partial_divide_by_zero(mask, np.full_like(self.array, other))
                 result[mask] = other / reduced.array[mask]
             return DimensionalArray(result, self.error_registry)
         return DimensionalArray(other / self.array, self.error_registry)
@@ -139,13 +139,13 @@ class DimensionalArray:
         reduced._right_singular_vector = getattr(self, '_right_singular_vector', None)
         return reduced
     
-    def _partial_divide_by_zero(self, mask: np.ndarray) -> 'DimensionalArray':
+    def _partial_divide_by_zero(self, mask: np.ndarray, divisor: np.ndarray) -> 'DimensionalArray':
         """Handle partial division by zero with proper dimensional reduction."""
         result = np.zeros_like(self.array, dtype=float)
         non_zero_mask = ~mask
         
         # Perform division where divisor is non-zero
-        np.divide(self.array, non_zero_mask, out=result, where=non_zero_mask, casting='unsafe')
+        np.divide(self.array, divisor, out=result, where=non_zero_mask, casting='unsafe')
         
         # Handle zero-division cases
         if self.array.ndim == 1:
@@ -181,7 +181,8 @@ class DimensionalArray:
         error_data = ErrorData(
             original_shape=self.array.shape,
             error_tensor=self.array - result,
-            reduction_type='partial'
+            reduction_type='partial',
+            mask=mask
         )
         error_id = self.error_registry.store(error_data)
         
@@ -286,24 +287,11 @@ class DimensionalArray:
     def ndim(self) -> int:
         return self.array.ndim
     
-    def __mul__(self, other: Union[int, float, complex, 'DimensionalArray']) -> 'DimensionalArray':
-        """Support multiplication with scalars (including complex) or other DimensionalArray instances."""
-        if isinstance(other, DimensionalArray):
-            return DimensionalArray(self.array * other.array, self.error_registry)
-        return DimensionalArray(self.array * other, self.error_registry)
-    
-    def __rmul__(self, other: Union[int, float, complex]) -> 'DimensionalArray':
-        """Support right multiplication with scalars (including complex)."""
-        return DimensionalArray(other * self.array, self.error_registry)
-        
     def __truediv__(self, other: Union[int, float, 'DimensionalArray']) -> 'DimensionalArray':
-        """Support division with scalars or other DimensionalArray instances."""
-        print(f"Dividing {self.array} by {other}")  # Debug print
-        
+        """Support division with scalars or other DimensionalArray instances."""        
         # Handle scalar division
         if isinstance(other, (int, float)):
             if other == 0:
-                print("Scalar division by zero detected")  # Debug print
                 return self._divide_by_zero()
             return DimensionalArray(self.array / other, self.error_registry)
         
@@ -312,15 +300,13 @@ class DimensionalArray:
             # Handle scalar DimensionalArray (0D array)
             if other.array.ndim == 0:
                 if float(other.array) == 0:  # Convert to float for comparison
-                    print("DimensionalArray scalar division by zero detected")  # Debug print
                     return self._divide_by_zero()
                 return DimensionalArray(self.array / other.array, self.error_registry)
             
             # Handle array division by zero
             if np.any(other.array == 0):
-                print("Partial division by zero detected")  # Debug print
                 mask = other.array == 0
-                result = self._partial_divide_by_zero(mask)
+                result = self._partial_divide_by_zero(mask, other.array)
                 # Perform regular division for non-zero elements
                 non_zero_mask = ~mask
                 result.array[non_zero_mask] = self.array[non_zero_mask] / other.array[non_zero_mask]
@@ -611,5 +597,4 @@ def array(array_like: Any, dtype: Any = None, error_registry: Optional[ErrorRegi
     Returns:
         DimensionalArray: A new array instance
     """
-    return DimensionalArray(array_like, error_registry=error_registry, dtype=dtype)
     return DimensionalArray(array_like, error_registry=error_registry, dtype=dtype)
