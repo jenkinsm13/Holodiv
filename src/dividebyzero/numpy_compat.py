@@ -10,6 +10,9 @@ import numpy as np
 import inspect
 from .numpy_registry import wrap_and_register_numpy_function
 
+# Keep track of names we intentionally export
+_exported_names = []
+
 # Register numpy functions and constants in the module namespace
 for name in dir(np):
     if name.startswith("_"):
@@ -17,17 +20,26 @@ for name in dir(np):
 
     obj = getattr(np, name)
 
-    if callable(obj) and not inspect.isclass(obj) and not inspect.ismodule(obj) and hasattr(obj, "__name__"):
+    if (
+        callable(obj)
+        and not inspect.isclass(obj)
+        and not inspect.ismodule(obj)
+        and hasattr(obj, "__name__")
+    ):
         try:
             # Wrap numpy functions so they understand DimensionalArray inputs
             globals()[name] = wrap_and_register_numpy_function(obj)
+            _exported_names.append(name)
         except (AttributeError, TypeError):
             # Some numpy objects (like ufuncs without names) cannot be wrapped
             continue
     else:
         # Expose non-callable objects (constants, etc.) directly
         globals()[name] = obj
+        _exported_names.append(name)
 
-# Export all public names we just populated
-__all__ = [name for name in globals() if not name.startswith("_")]
+# Export only the numpy names we populated above
+__all__ = _exported_names
 
+# Prevent leaking internal helpers
+del np, inspect, wrap_and_register_numpy_function, _exported_names
