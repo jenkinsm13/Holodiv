@@ -38,7 +38,8 @@ for name in dir(np):
         _exported_names.append(name)
 
 # Export only the numpy names we populated above
-__all__ = _exported_names
+# Using a tuple prevents accidental mutation after cleanup
+__all__ = tuple(_exported_names)
 
 # Prevent leaking internal helpers
 del np, inspect, wrap_and_register_numpy_function, _exported_names
