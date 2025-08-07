@@ -1,5 +1,11 @@
-"""
-Dividebyzero: A framework for handling singularities in numerical computations.
+"""dividebyzero: dimensional-safe numerical computing.
+
+This package is designed to be imported as ``import dividebyzero as dbz``.
+Top-level APIs such as :func:`dbz.array`, :func:`dbz.zeros`, and
+class :class:`dbz.DimensionalArray` are available directly from the
+``dbz`` namespace.  Use :mod:`dbz.numpy_compat` only when a drop-in
+replacement for ``numpy`` is explicitly required; typical code should
+prefer the simpler ``import dividebyzero as dbz`` form.
 """
 
 import numpy as np
