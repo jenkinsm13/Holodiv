@@ -20,12 +20,14 @@ def test_numpy_compat_does_not_expose_internal_helpers():
     """Internal implementation details should not be publicly exported."""
 
     # None of the helper names should be present in the public API
-    assert "np" not in numpy_compat.__all__
-    assert "inspect" not in numpy_compat.__all__
-    assert "wrap_and_register_numpy_function" not in numpy_compat.__all__
+    internal_helpers = [
+        "np",
+        "inspect",
+        "wrap_and_register_numpy_function",
+        "_exported_names",
+    ]
 
-    # These names are also removed from the module namespace
-    assert not hasattr(numpy_compat, "np")
-    assert not hasattr(numpy_compat, "inspect")
-    assert not hasattr(numpy_compat, "wrap_and_register_numpy_function")
+    for helper in internal_helpers:
+        assert helper not in numpy_compat.__all__
+        assert not hasattr(numpy_compat, helper)
 
