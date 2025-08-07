@@ -1,13 +1,14 @@
 """
-Numpy compatibility layer for dividebyzero.
-Allows dbz to act as a complete drop-in replacement for numpy.
+NumPy compatibility layer for DivideByZero.
+
+Access this module via ``dbz.numpy_compat`` after ``import dividebyzero as
+dbz``.  It lets DivideByZero act as a drop-in replacement for NumPy, but most
+code can simply use the top-level ``dbz`` API directly.
 """
 
 import numpy as np
 import inspect
-
 from .numpy_registry import wrap_and_register_numpy_function
-
 
 # Keep track of names we intentionally export
 _exported_names = []
@@ -38,9 +39,7 @@ for name in dir(np):
         _exported_names.append(name)
 
 # Export only the numpy names we populated above
-# Using a tuple prevents accidental mutation after cleanup
-__all__ = tuple(_exported_names)
+__all__ = _exported_names
 
 # Prevent leaking internal helpers
 del np, inspect, wrap_and_register_numpy_function, _exported_names
-
