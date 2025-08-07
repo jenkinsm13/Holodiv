@@ -44,7 +44,9 @@ reconstructed = result.elevate()
 ### Key Features
 
 #### 1. Transparent NumPy Integration
-- Drop-in replacement for numpy operations
+- Use ``import dividebyzero as dbz`` and call NumPy-like functions directly
+  (``dbz.array``, ``dbz.zeros``)
+- For rare drop-in scenarios, ``dbz.numpy_compat`` mirrors the NumPy API
 - Preserves standard numerical behavior
 - Extends functionality to handle singularities
 
@@ -55,11 +57,10 @@ reconstructed = result.elevate()
 
 #### 3. Advanced Mathematical Operations
 ```python
-# Quantum tensor operations
-from dividebyzero.quantum import QuantumTensor
+import dividebyzero as dbz
 
-# Create quantum-aware tensor
-q_tensor = QuantumTensor(data, physical_dims=(2, 2, 2))
+# Quantum tensor operations
+q_tensor = dbz.quantum.QuantumTensor(data, physical_dims=(2, 2, 2))
 
 # Perform gauge-invariant reduction
 reduced = q_tensor.reduce_dimension(
