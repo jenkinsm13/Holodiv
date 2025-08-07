@@ -1,4 +1,4 @@
-"""dividebyzero: dimensional-safe numerical computing.
+"""Dividebyzero: dimensional-safe numerical computing.
 
 This package is designed to be imported as ``import dividebyzero as dbz``.
 Top-level APIs such as :func:`dbz.array`, :func:`dbz.zeros`, and
