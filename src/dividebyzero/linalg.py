@@ -1,3 +1,11 @@
+"""
+Linear algebra helpers that mirror :mod:`numpy.linalg` but operate on
+``DimensionalArray`` inputs.
+
+After ``import dividebyzero as dbz`` these routines are available under
+``dbz.linalg``.
+"""
+
 import numpy as np
 from scipy.linalg import logm as scipy_logm
 from .array import DimensionalArray
