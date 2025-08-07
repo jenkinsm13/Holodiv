@@ -1,5 +1,8 @@
 """
 Core array implementation with division by zero support.
+
+Access through ``dbz.array`` and ``dbz.DimensionalArray`` after
+``import dividebyzero as dbz``.
 """
 
 import numpy as np
