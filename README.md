@@ -141,6 +141,23 @@ reconstructed = reduced_data.elevate()
 pytest tests/
 ```
 
+## Demonstration Suite
+
+Standalone examples are available in the [`examples/`](examples/) directory to
+showcase typical usage patterns and advanced features:
+
+```bash
+python examples/basic_reduction.py      # Dimensional reduction and registry
+python examples/numpy_integration.py    # NumPy-compatible operations
+python examples/quantum_tensor.py       # Quantum tensor utilities
+python examples/financial_returns.py    # Market returns with zero-price days
+python examples/web_pagerank.py         # PageRank transition matrix without NaNs
+python examples/image_normalization.py  # Image normalization with dark pixels
+```
+
+Each script prints intermediate results illustrating how the library safely
+handles division by zero while preserving recoverable information.
+
 ## Mathematical Documentation
 
 Detailed mathematical foundations are available in the [Technical Documentation](docs/theory.md), including:
