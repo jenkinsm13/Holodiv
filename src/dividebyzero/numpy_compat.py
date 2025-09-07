@@ -62,5 +62,5 @@ for name in _wrapped_np.__all__:
     globals()[name] = getattr(_wrapped_np, name)
 
 # Export all public names we just populated
-__all__ = [name for name in globals() if not name.startswith("_")]
+__all__ = _wrapped_np.__all__
 
