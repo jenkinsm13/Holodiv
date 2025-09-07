@@ -1,32 +1,65 @@
-"""
-NumPy compatibility layer for DivideByZero.
+"""NumPy compatibility layer for DivideByZero.
 
-Access this module via ``dbz.numpy_compat`` after ``import dividebyzero as
-dbz``.  It lets DivideByZero act as a drop-in replacement for NumPy, but most
-code can simply use the top-level ``dbz`` API directly.
+This module exposes the full NumPy API but transparently converts
+``DimensionalArray`` arguments to plain ``numpy.ndarray`` objects and back.
+It is primarily used internally when importing ``dividebyzero`` as a
+drop-in replacement for NumPy, but it can also be accessed explicitly via
+``dbz.numpy_compat``.
 """
 
-import numpy as np
+from __future__ import annotations
+
 import inspect
+import types
+import numpy as np
+
 from .numpy_registry import wrap_and_register_numpy_function
 
-# Register numpy functions and constants in the module namespace
-for name in dir(np):
-    if name.startswith("_"):
-        continue
 
-    obj = getattr(np, name)
+def _wrap_module(np_module: types.ModuleType, visited: dict[types.ModuleType, types.ModuleType] | None = None) -> types.ModuleType:
+    """Recursively wrap a NumPy module.
 
-    if callable(obj) and not inspect.isclass(obj) and not inspect.ismodule(obj) and hasattr(obj, "__name__"):
-        try:
-            # Wrap numpy functions so they understand DimensionalArray inputs
-            globals()[name] = wrap_and_register_numpy_function(obj)
-        except (AttributeError, TypeError):
-            # Some numpy objects (like ufuncs without names) cannot be wrapped
-            continue
-    else:
-        # Expose non-callable objects (constants, etc.) directly
-        globals()[name] = obj
+    Callables are wrapped so they understand ``DimensionalArray`` inputs
+    and outputs. Submodules are processed recursively so that functions
+    like ``numpy.linalg.pinv`` are available and behave correctly.
+    """
+
+    if visited is None:
+        visited = {}
+    if np_module in visited:
+        return visited[np_module]
+
+    module = types.ModuleType(np_module.__name__)
+    visited[np_module] = module
+
+    names = [name for name in dir(np_module) if not name.startswith("_")]
+
+    # Register callables and other objects first
+    for name in names:
+        obj = getattr(np_module, name)
+
+        if callable(obj) and not inspect.isclass(obj) and not inspect.ismodule(obj) and hasattr(obj, "__name__"):
+            try:
+                setattr(module, name, wrap_and_register_numpy_function(obj))
+            except (AttributeError, TypeError):
+                setattr(module, name, obj)
+        elif not inspect.ismodule(obj):
+            setattr(module, name, obj)
+
+    # Process submodules afterwards so they don't override top-level registrations
+    for name in names:
+        obj = getattr(np_module, name)
+        if inspect.ismodule(obj):
+            setattr(module, name, _wrap_module(obj, visited))
+
+    module.__all__ = [name for name in dir(module) if not name.startswith("_")]
+    return module
+
+
+# Populate the module namespace with the wrapped NumPy API
+_wrapped_np = _wrap_module(np)
+for name in _wrapped_np.__all__:
+    globals()[name] = getattr(_wrapped_np, name)
 
 # Export all public names we just populated
 __all__ = [name for name in globals() if not name.startswith("_")]
