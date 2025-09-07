@@ -58,8 +58,10 @@ def array(array_like, dtype=None):
     """Create a DimensionalArray."""
     return DimensionalArray(array_like, error_registry=_REGISTRY, dtype=dtype)
 
-# Add all registered numpy functions to the module namespace
-globals().update(_numpy_functions)
+# Add all registered numpy functions to the module namespace without
+# overwriting existing definitions
+_existing = set(globals())
+globals().update({k: v for k, v in _numpy_functions.items() if k not in _existing})
 
 # Build __all__ list
 base_exports = [
@@ -72,7 +74,9 @@ base_exports = [
     'linspace', 'arange', 'abs'
 ]
 
-__all__ = base_exports + [name for name in _numpy_functions if name not in base_exports]
+__all__ = base_exports + [
+    name for name in _numpy_functions if name not in base_exports and name not in _existing
+]
 
 def set_log_level(level):
     """

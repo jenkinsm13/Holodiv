@@ -75,8 +75,16 @@ def inv(a):
     """
     if isinstance(a, DimensionalArray):
         a = a.array
-    
+
     return DimensionalArray(np.linalg.inv(a))
+
+def pinv(a, rcond=1e-15, hermitian=False):
+    """Compute the Moore-Penrose pseudo-inverse of a matrix."""
+    if isinstance(a, DimensionalArray):
+        a = a.array
+
+    result = np.linalg.pinv(a, rcond=rcond, hermitian=hermitian)
+    return DimensionalArray(result)
 
 def eigvals(a):
     """
@@ -151,5 +159,5 @@ def logm(a):
     
     # Final result: log(π(A)) + log(1 + ε(A)/π(A))
     result = log_projected + correction
-    
+
     return DimensionalArray(result)
