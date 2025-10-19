@@ -1,11 +1,11 @@
 """Holodiv: dimensional-safe numerical computing.
 
-This package is designed to be imported as ``import holodiv as dbz``.
-Top-level APIs such as :func:`dbz.array`, :func:`dbz.zeros`, and
-class :class:`dbz.DimensionalArray` are available directly from the
-``dbz`` namespace.  Use :mod:`dbz.numpy_compat` only when a drop-in
+This package is designed to be imported as ``import holodiv as hd``.
+Top-level APIs such as :func:`hd.array`, :func:`hd.zeros`, and
+class :class:`hd.DimensionalArray` are available directly from the
+``hd`` namespace.  Use :mod:`hd.numpy_compat` only when a drop-in
 replacement for ``numpy`` is explicitly required; typical code should
-prefer the simpler ``import holodiv as dbz`` form.
+prefer the simpler ``import holodiv as hd`` form.
 """
 
 import numpy as np

@@ -2,8 +2,8 @@
 Linear algebra helpers that mirror :mod:`numpy.linalg` but operate on
 ``DimensionalArray`` inputs.
 
-After ``import holodiv as dbz`` these routines are available under
-``dbz.linalg``.
+After ``import holodiv as hd`` these routines are available under
+``hd.linalg``.
 """
 
 import numpy as np

@@ -1,8 +1,8 @@
 """
 Core array implementation with division by zero support.
 
-Access through ``dbz.array`` and ``dbz.DimensionalArray`` after
-``import holodiv as dbz``.
+Access through ``hd.array`` and ``hd.DimensionalArray`` after
+``import holodiv as hd``.
 """
 
 import numpy as np

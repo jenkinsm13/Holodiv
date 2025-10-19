@@ -4,7 +4,7 @@ This module exposes the full NumPy API but transparently converts
 ``DimensionalArray`` arguments to plain ``numpy.ndarray`` objects and back.
 It is primarily used internally when importing ``holodiv`` as a
 drop-in replacement for NumPy, but it can also be accessed explicitly via
-``dbz.numpy_compat``.
+``hd.numpy_compat``.
 """
 
 from __future__ import annotations

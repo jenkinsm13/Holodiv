@@ -25,7 +25,7 @@ from .gauge import (
 from .gauge_groups import SU2Group, SU3Group
 from .holonomy import HolonomyCalculator
 
-# Make QuantumTensor directly available as dbz.quantum.QuantumTensor
+# Make QuantumTensor directly available as hd.quantum.QuantumTensor
 QuantumTensor = QuantumTensor
 
 __all__ = [

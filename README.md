@@ -28,10 +28,10 @@ pip install holodiv
 
 ### Basic Operations
 ```python
-import holodiv as dbz
+import holodiv as hd
 
 # Create dimensional array
-x = dbz.array([[1, 2, 3],
+x = hd.array([[1, 2, 3],
                [4, 5, 6]])
 
 # Divide by zero - reduces dimension
@@ -44,9 +44,9 @@ reconstructed = result.elevate()
 ### Key Features
 
 #### 1. Transparent NumPy Integration
-- Use ``import holodiv as dbz`` and call NumPy-like functions directly
-  (``dbz.array``, ``dbz.zeros``)
-- For rare drop-in scenarios, ``dbz.numpy_compat`` mirrors the NumPy API
+- Use ``import holodiv as hd`` and call NumPy-like functions directly
+  (``hd.array``, ``hd.zeros``)
+- For rare drop-in scenarios, ``hd.numpy_compat`` mirrors the NumPy API
 - Preserves standard numerical behavior
 - Extends functionality to handle singularities
 
@@ -57,10 +57,10 @@ reconstructed = result.elevate()
 
 #### 3. Advanced Mathematical Operations
 ```python
-import holodiv as dbz
+import holodiv as hd
 
 # Quantum tensor operations
-q_tensor = dbz.quantum.QuantumTensor(data, physical_dims=(2, 2, 2))
+q_tensor = hd.quantum.QuantumTensor(data, physical_dims=(2, 2, 2))
 
 # Perform gauge-invariant reduction
 reduced = q_tensor.reduce_dimension(
@@ -86,7 +86,7 @@ The framework is built on a foundation of several key mathematical concepts:
 ### 1. Quantum Computing
 ```python
 # Quantum state manipulation
-state = dbz.quantum.QuantumTensor([
+state = hd.quantum.QuantumTensor([
     [1, 0],
     [0, 1]
 ])
@@ -99,13 +99,13 @@ reduced_state = state / 0
 ```python
 # Handle singularities in numerical computations
 def stable_computation(x):
-    return dbz.array(x) / 0  # Returns dimensional reduction instead of error
+    return hd.array(x) / 0  # Returns dimensional reduction instead of error
 ```
 
 ### 3. Data Processing
 ```python
 # Dimensionality reduction with information preservation
-reduced_data = dbz.array(high_dim_data) / 0
+reduced_data = hd.array(high_dim_data) / 0
 reconstructed = reduced_data.elevate()
 ```
 
