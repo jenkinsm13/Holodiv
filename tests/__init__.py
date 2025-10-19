@@ -1,4 +1,4 @@
-"""Test suite initialization for dividebyzero package."""
+"""Test suite initialization for holodiv package."""
 
 import numpy as np
 import pytest

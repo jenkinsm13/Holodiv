@@ -1,8 +1,8 @@
-"""Test suite for quantum features of dividebyzero."""
+"""Test suite for quantum features of holodiv."""
 
 import pytest
 import numpy as np
-from dividebyzero.quantum import (
+from holodiv.quantum import (
     QuantumTensor,
     GaugeField,
     SU2Group,

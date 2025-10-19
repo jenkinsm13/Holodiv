@@ -1,4 +1,4 @@
-"""Custom exceptions for the dividebyzero package."""
+"""Custom exceptions for the holodiv package."""
 
 class DimensionalError(Exception):
     """Error in dimensional operations."""

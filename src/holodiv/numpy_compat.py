@@ -1,8 +1,8 @@
-"""NumPy compatibility layer for DivideByZero.
+"""NumPy compatibility layer for Holodiv.
 
 This module exposes the full NumPy API but transparently converts
 ``DimensionalArray`` arguments to plain ``numpy.ndarray`` objects and back.
-It is primarily used internally when importing ``dividebyzero`` as a
+It is primarily used internally when importing ``holodiv`` as a
 drop-in replacement for NumPy, but it can also be accessed explicitly via
 ``dbz.numpy_compat``.
 """

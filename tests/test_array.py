@@ -2,8 +2,8 @@
 
 import pytest
 import numpy as np
-from dividebyzero import array, DimensionalArray
-from dividebyzero.exceptions import DimensionalError, ReconstructionError
+from holodiv import array, DimensionalArray
+from holodiv.exceptions import DimensionalError, ReconstructionError
 from . import generate_test_array, assert_array_equal_with_tolerance
 
 class TestDimensionalArray:
@@ -486,8 +486,8 @@ class TestDimensionalArray:
 
     def test_error_registry_handling(self):
         """Test error registry handling in operations."""
-        from dividebyzero import get_registry
-        from dividebyzero import DimensionalArray
+        from holodiv import get_registry
+        from holodiv import DimensionalArray
         
         # Test custom registry
         custom_registry = get_registry()

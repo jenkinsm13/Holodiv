@@ -1,8 +1,8 @@
 """Tests for the numpy compatibility layer."""
 
 import numpy as np
-from dividebyzero import array, DimensionalArray
-from dividebyzero.numpy_compat import sin, pi
+from holodiv import array, DimensionalArray
+from holodiv.numpy_compat import sin, pi
 
 
 def test_numpy_compat_exports_functions_and_constants():

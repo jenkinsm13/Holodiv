@@ -1,11 +1,11 @@
-"""Dividebyzero: dimensional-safe numerical computing.
+"""Holodiv: dimensional-safe numerical computing.
 
-This package is designed to be imported as ``import dividebyzero as dbz``.
+This package is designed to be imported as ``import holodiv as dbz``.
 Top-level APIs such as :func:`dbz.array`, :func:`dbz.zeros`, and
 class :class:`dbz.DimensionalArray` are available directly from the
 ``dbz`` namespace.  Use :mod:`dbz.numpy_compat` only when a drop-in
 replacement for ``numpy`` is explicitly required; typical code should
-prefer the simpler ``import dividebyzero as dbz`` form.
+prefer the simpler ``import holodiv as dbz`` form.
 """
 
 import numpy as np
@@ -80,13 +80,13 @@ __all__ = base_exports + [
 
 def set_log_level(level):
     """
-    Set the logging level for the entire dividebyzero library.
+    Set the logging level for the entire holodiv library.
     
     Args:
         level: The logging level to set. Can be a string ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
                or a corresponding integer value.
     """
-    logger = logging.getLogger('dividebyzero')
+    logger = logging.getLogger('holodiv')
     logger.setLevel(level)
     for handler in logger.handlers:
         handler.setLevel(level)

@@ -2,7 +2,7 @@
 Linear algebra helpers that mirror :mod:`numpy.linalg` but operate on
 ``DimensionalArray`` inputs.
 
-After ``import dividebyzero as dbz`` these routines are available under
+After ``import holodiv as dbz`` these routines are available under
 ``dbz.linalg``.
 """
 
