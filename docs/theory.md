@@ -4,7 +4,7 @@
 
 ### Abstract
 
-This document presents the theoretical foundations of the DivideByZero framework, which reconceptualizes division by zero as a dimensional reduction operator. We develop a rigorous mathematical framework that transforms traditionally undefined operations into well-defined dimensional transformations, with applications in quantum computing, numerical analysis, and tensor network theory.
+This document presents the theoretical foundations of the Holodiv framework, which reconceptualizes division by zero as a dimensional reduction operator. We develop a rigorous mathematical framework that transforms traditionally undefined operations into well-defined dimensional transformations, with applications in quantum computing, numerical analysis, and tensor network theory.
 
 ## 1. Core Mathematical Formalism
 
