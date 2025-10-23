@@ -1,11 +1,10 @@
 """
-Quantum Tensor Network Implementation
+Quantum Tensor Implementation
 
-This module implements quantum tensor operations with support for:
-- Entanglement entropy calculations
-- Schmidt decomposition
-- Tensor network contractions
-- Holographic dimensional reduction
+This module provides the `QuantumTensor` class, which is a specialized tensor
+class that includes support for quantum-mechanical concepts such as entanglement,
+Schmidt decomposition, and dimensional reduction that preserves quantum
+properties. It is designed to be used in the context of the `holodiv` library.
 """
 
 import numpy as np
@@ -30,7 +29,11 @@ class EntanglementSpectrum:
 
 class QuantumTensor:
     """
-    Implements a quantum-aware tensor with support for entanglement operations.
+    A tensor class that represents a quantum state and supports quantum operations.
+
+    This class extends the functionality of a standard tensor to include
+    quantum-mechanical properties such as entanglement and Schmidt decomposition.
+    It is designed to be used for quantum information processing and research.
     """
     def __init__(self, data, physical_dims=None, quantum_nums=None):
         """
@@ -99,7 +102,11 @@ class QuantumTensor:
                         preserve_entanglement: bool = True,
                         max_iterations: int = 100) -> 'QuantumTensor':
         """
-        Reduce tensor dimensions while preserving quantum properties.
+        Reduces the dimensionality of the tensor to a target number of dimensions.
+
+        This method iteratively applies Schmidt decomposition to reduce the tensor's
+        dimensionality. It can optionally preserve entanglement by truncating the
+        Schmidt values.
         """
         logger.debug(f"Reducing dimension with target_dims: {target_dims}, preserve_entanglement: {preserve_entanglement}")
         if self.data.ndim <= target_dims:
@@ -142,8 +149,7 @@ class QuantumTensor:
             )
             
             if new_tensor.data.ndim >= current_tensor.data.ndim:
-                logger.warning(f"Failed to reduce dimensions at iteration {iteration}")
-                break
+                raise DimensionalError(f"Failed to reduce dimensions at iteration {iteration}")
             
             current_tensor = new_tensor
             iteration += 1
@@ -244,8 +250,12 @@ class QuantumTensor:
 
     def _handle_division_by_zero(self, divisor: np.ndarray) -> 'QuantumTensor':
         """
-        Implement DMRG-based dimensional reduction with support for multipartite states.
-        Uses hierarchical SVD for n>2 qubit systems while preserving entanglement structure.
+        Handles division by zero by performing a dimensionality reduction.
+
+        This method is triggered when a division by zero is attempted on a
+        QuantumTensor. It uses a Density Matrix Renormalization Group (DMRG)-like
+        approach to reduce the dimensionality of the tensor while preserving
+        as much entanglement as possible.
         """
         if self.data.ndim == 0:
             raise DimensionalError("Cannot reduce dimensions of a scalar tensor")

@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="dividebyzero",
+    name="holodiv",
     version="0.1.0",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -20,10 +20,10 @@ setup(
     },
     author="Michael C. Jenkins",
     author_email="jenkinsm@gmail.com",
-    description="A quantum tensor network library for dimensional reduction and elevation",
+    description="A library for holographic dimensional reduction via division.",
     long_description=open("README.md").read() if open("README.md") else "",
     long_description_content_type="text/markdown",
-    keywords="quantum, tensor networks, dimensional reduction",
+    keywords="holodiv, dimensional reduction, quantum, tensor networks",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",

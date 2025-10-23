@@ -2,13 +2,13 @@
 
 import pytest
 import numpy as np
-from dividebyzero.operators import (
+from holodiv.operators import (
     reduce_dimension,
     elevate_dimension,
     _reduce_vector,
     _reduce_tensor
 )
-from dividebyzero.exceptions import DimensionalError
+from holodiv.exceptions import DimensionalError
 from . import generate_test_array, assert_array_equal_with_tolerance
 
 class TestOperators:

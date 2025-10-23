@@ -1,8 +1,8 @@
 """
 Core array implementation with division by zero support.
 
-Access through ``dbz.array`` and ``dbz.DimensionalArray`` after
-``import dividebyzero as dbz``.
+Access through ``hd.array`` and ``hd.DimensionalArray`` after
+``import holodiv as hd``.
 """
 
 import numpy as np
@@ -81,27 +81,56 @@ class DimensionalArray:
             return DimensionalArray(self.array * other.array, self.error_registry)
         return DimensionalArray(self.array * other, self.error_registry)
 
+    def __mul__(self, other: Union[int, float, complex, 'DimensionalArray']) -> 'DimensionalArray':
+        """Support multiplication with scalars (including complex) or other DimensionalArray instances."""
+        if isinstance(other, DimensionalArray):
+            return DimensionalArray(self.array * other.array, self.error_registry)
+        return DimensionalArray(self.array * other, self.error_registry)
+
     def __rmul__(self, other: Union[int, float, complex]) -> 'DimensionalArray':
         """Support right multiplication with scalars (including complex)."""
         return DimensionalArray(other * self.array, self.error_registry)
 
     def __rtruediv__(self, other: Union[int, float, complex]) -> 'DimensionalArray':
         """Support right division (other / self)."""
-        # Handle division by zero using dimensional reduction if needed
-        if np.any(self.array == 0):
-            mask = self.array == 0
-            result = np.zeros_like(self.array, dtype=float)
-            non_zero_mask = ~mask
-            result[non_zero_mask] = other / self.array[non_zero_mask]
-            # For zero elements, use dimensional reduction
-            if np.any(mask):
-                reduced = self._partial_divide_by_zero(mask)
-                result[mask] = other / reduced.array[mask]
-            return DimensionalArray(result, self.error_registry)
-        return DimensionalArray(other / self.array, self.error_registry)
+        return DimensionalArray(other)._divide(self)
+
+    def _divide(self, other: Union[int, float, 'DimensionalArray']) -> 'DimensionalArray':
+        """Unified division method."""
+        if isinstance(other, (int, float)):
+            if other == 0:
+                return self._divide_by_zero()
+            return DimensionalArray(self.array / other, self.error_registry)
+
+        if isinstance(other, DimensionalArray):
+            if other.array.ndim == 0:
+                if float(other.array) == 0:
+                    return self._divide_by_zero()
+                return DimensionalArray(self.array / other.array, self.error_registry)
+
+            if np.any(other.array == 0):
+                mask = other.array == 0
+                result = self._partial_divide_by_zero(mask)
+                non_zero_mask = ~mask
+                result.array[non_zero_mask] = self.array[non_zero_mask] / other.array[non_zero_mask]
+                return result
+
+            return DimensionalArray(self.array / other.array, self.error_registry)
+
+        raise TypeError(f"Unsupported type for division: {type(other)}")
 
     def _divide_by_zero(self) -> 'DimensionalArray':
-        """Implement complete division by zero"""
+        """
+        Implement complete division by zero.
+
+        This method uses different strategies depending on the dimensionality
+        of the array. For scalars, it preserves the magnitude. For 1D arrays,
+        it reduces the array to its mean value, which is a common technique
+        for summarizing a dataset. For higher-dimensional arrays, it performs
+        Singular Value Decomposition (SVD) and truncates the result to the
+        first singular value, which is a form of dimensionality reduction
+        that preserves the most significant feature of the data.
+        """
         original_shape = self.array.shape
         ndim = self.array.ndim
         
@@ -143,7 +172,16 @@ class DimensionalArray:
         return reduced
     
     def _partial_divide_by_zero(self, mask: np.ndarray) -> 'DimensionalArray':
-        """Handle partial division by zero with proper dimensional reduction."""
+        """
+        Handle partial division by zero with proper dimensional reduction.
+
+        For 1D arrays, this method replaces the zero-division results with the
+        mean of the non-zero elements. This approach is a form of imputation
+        that preserves the central tendency of the data.
+
+        For higher-dimensional arrays, this method iterates over slices of the
+        array and applies the same mean-imputation strategy to each slice.
+        """
         result = np.zeros_like(self.array, dtype=float)
         non_zero_mask = ~mask
         
@@ -288,50 +326,10 @@ class DimensionalArray:
     @property
     def ndim(self) -> int:
         return self.array.ndim
-    
-    def __mul__(self, other: Union[int, float, complex, 'DimensionalArray']) -> 'DimensionalArray':
-        """Support multiplication with scalars (including complex) or other DimensionalArray instances."""
-        if isinstance(other, DimensionalArray):
-            return DimensionalArray(self.array * other.array, self.error_registry)
-        return DimensionalArray(self.array * other, self.error_registry)
-    
-    def __rmul__(self, other: Union[int, float, complex]) -> 'DimensionalArray':
-        """Support right multiplication with scalars (including complex)."""
-        return DimensionalArray(other * self.array, self.error_registry)
         
     def __truediv__(self, other: Union[int, float, 'DimensionalArray']) -> 'DimensionalArray':
         """Support division with scalars or other DimensionalArray instances."""
-        print(f"Dividing {self.array} by {other}")  # Debug print
-        
-        # Handle scalar division
-        if isinstance(other, (int, float)):
-            if other == 0:
-                print("Scalar division by zero detected")  # Debug print
-                return self._divide_by_zero()
-            return DimensionalArray(self.array / other, self.error_registry)
-        
-        # Handle DimensionalArray division
-        if isinstance(other, DimensionalArray):
-            # Handle scalar DimensionalArray (0D array)
-            if other.array.ndim == 0:
-                if float(other.array) == 0:  # Convert to float for comparison
-                    print("DimensionalArray scalar division by zero detected")  # Debug print
-                    return self._divide_by_zero()
-                return DimensionalArray(self.array / other.array, self.error_registry)
-            
-            # Handle array division by zero
-            if np.any(other.array == 0):
-                print("Partial division by zero detected")  # Debug print
-                mask = other.array == 0
-                result = self._partial_divide_by_zero(mask)
-                # Perform regular division for non-zero elements
-                non_zero_mask = ~mask
-                result.array[non_zero_mask] = self.array[non_zero_mask] / other.array[non_zero_mask]
-                return result
-                
-            return DimensionalArray(self.array / other.array, self.error_registry)
-        
-        raise TypeError(f"Unsupported type for division: {type(other)}")
+        return self._divide(other)
     
     def __add__(self, other: Union[int, float, complex, 'DimensionalArray']) -> 'DimensionalArray':
         """Support addition with scalars or other DimensionalArray instances."""
@@ -614,5 +612,4 @@ def array(array_like: Any, dtype: Any = None, error_registry: Optional[ErrorRegi
     Returns:
         DimensionalArray: A new array instance
     """
-    return DimensionalArray(array_like, error_registry=error_registry, dtype=dtype)
     return DimensionalArray(array_like, error_registry=error_registry, dtype=dtype)

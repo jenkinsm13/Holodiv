@@ -25,14 +25,14 @@ def wrap_and_register_numpy_function(np_func: Callable) -> Callable:
 
     @wraps(np_func)
     def wrapper(*args, **kwargs):
-        # Convert dbz arrays to numpy arrays for input
+        # Convert hd arrays to numpy arrays for input
         args = [(arg.array if isinstance(arg, DimensionalArray) else arg) for arg in args]
         kwargs = {k: (v.array if isinstance(v, DimensionalArray) else v) for k, v in kwargs.items()}
 
         # Call original numpy function
         result = np_func(*args, **kwargs)
 
-        # Convert result back to dbz array
+        # Convert result back to hd array
         if isinstance(result, np.ndarray):
             return DimensionalArray(result)
         elif isinstance(result, tuple):

@@ -1,8 +1,8 @@
-# DivideByZero: Dimensional Reduction Through Mathematical Singularities
+# Holodiv: Dimensional Reduction Through Mathematical Singularities
 
 ## Foundational Framework for Computational Singularity Analysis
 
-DivideByZero (`dividebyzero`) implements a novel mathematical framework that reconceptualizes division by zero as dimensional reduction operations. This paradigm shift transforms traditionally undefined mathematical operations into well-defined dimensional transformations, enabling new approaches to numerical analysis and quantum computation.
+Holodiv (`holodiv`) implements a novel mathematical framework that reconceptualizes division by zero as dimensional reduction operations. This paradigm shift transforms traditionally undefined mathematical operations into well-defined dimensional transformations, enabling new approaches to numerical analysis and quantum computation.
 
 ## Core Mathematical Principles
 
@@ -21,17 +21,17 @@ Where:
 ### Installation
 
 ```bash
-pip install dividebyzero
+pip install holodiv
 ```
 
 ## Fundamental Usage Patterns
 
 ### Basic Operations
 ```python
-import dividebyzero as dbz
+import holodiv as hd
 
 # Create dimensional array
-x = dbz.array([[1, 2, 3],
+x = hd.array([[1, 2, 3],
                [4, 5, 6]])
 
 # Divide by zero - reduces dimension
@@ -44,9 +44,9 @@ reconstructed = result.elevate()
 ### Key Features
 
 #### 1. Transparent NumPy Integration
-- Use ``import dividebyzero as dbz`` and call NumPy-like functions directly
-  (``dbz.array``, ``dbz.zeros``)
-- For rare drop-in scenarios, ``dbz.numpy_compat`` mirrors the NumPy API
+- Use ``import holodiv as hd`` and call NumPy-like functions directly
+  (``hd.array``, ``hd.zeros``)
+- For rare drop-in scenarios, ``hd.numpy_compat`` mirrors the NumPy API
 - Preserves standard numerical behavior
 - Extends functionality to handle singularities
 
@@ -57,10 +57,10 @@ reconstructed = result.elevate()
 
 #### 3. Advanced Mathematical Operations
 ```python
-import dividebyzero as dbz
+import holodiv as hd
 
 # Quantum tensor operations
-q_tensor = dbz.quantum.QuantumTensor(data, physical_dims=(2, 2, 2))
+q_tensor = hd.quantum.QuantumTensor(data, physical_dims=(2, 2, 2))
 
 # Perform gauge-invariant reduction
 reduced = q_tensor.reduce_dimension(
@@ -73,29 +73,20 @@ reduced = q_tensor.reduce_dimension(
 
 ### Mathematical Foundations
 
-The framework builds on several key mathematical concepts:
+The framework is built on a foundation of several key mathematical concepts:
 
-1. **Dimensional Reduction**
-   - Singular Value Decomposition (SVD)
-   - Information-preserving projections
-   - Error quantization mechanisms
+1.  **Dimensional Reduction**: The core of the library is its ability to perform dimensionality reduction. This is achieved through different strategies depending on the dimensionality of the input data. For 1D arrays, the library uses mean imputation, a statistical technique for handling missing data. For higher-dimensional arrays, it uses Singular Value Decomposition (SVD), a powerful matrix factorization technique that can be used to identify the most significant features of a dataset.
 
-2. **Quantum Extensions**
-   - Tensor network operations
-   - Gauge field computations
-   - Holonomy calculations
+2.  **Quantum Extensions**: The library includes a `quantum` module that extends its functionality to the domain of quantum information. This module provides a `QuantumTensor` class that can represent quantum states and supports operations such as Schmidt decomposition and entanglement-preserving dimensionality reduction.
 
-3. **Error Tracking**
-   - Holographic error encoding
-   - Dimensional reconstruction algorithms
-   - Quantum state preservation
+3.  **Error Tracking**: The library includes a sophisticated error-tracking system that is designed to preserve information during dimensionality reduction. This system stores the "error" introduced by the reduction, which can then be used to reconstruct the original data. The reconstruction process also includes a stochastic component, which is designed to account for the uncertainty inherent in the reduction process.
 
 ## Advanced Applications
 
 ### 1. Quantum Computing
 ```python
 # Quantum state manipulation
-state = dbz.quantum.QuantumTensor([
+state = hd.quantum.QuantumTensor([
     [1, 0],
     [0, 1]
 ])
@@ -108,13 +99,13 @@ reduced_state = state / 0
 ```python
 # Handle singularities in numerical computations
 def stable_computation(x):
-    return dbz.array(x) / 0  # Returns dimensional reduction instead of error
+    return hd.array(x) / 0  # Returns dimensional reduction instead of error
 ```
 
 ### 3. Data Processing
 ```python
 # Dimensionality reduction with information preservation
-reduced_data = dbz.array(high_dim_data) / 0
+reduced_data = hd.array(high_dim_data) / 0
 reconstructed = reduced_data.elevate()
 ```
 
@@ -155,11 +146,11 @@ Detailed mathematical foundations are available in the [Technical Documentation]
 If you use this framework in your research, please cite:
 
 ```bibtex
-@software{dividebyzero2024,
-  title={DivideByZero: Dimensional Reduction Through Mathematical Singularities},
+@software{holodiv2024,
+  title={Holodiv: Dimensional Reduction Through Mathematical Singularities},
   author={Michael C. Jenkins},
   year={2024},
-  url={https://github.com/jenkinsm13/dividebyzero}
+  url={https://github.com/jenkinsm13/holodiv}
 }
 ```
 

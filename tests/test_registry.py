@@ -2,8 +2,8 @@
 
 import pytest
 import numpy as np
-from dividebyzero.registry import ErrorRegistry, ErrorData
-from dividebyzero.exceptions import RegistryError
+from holodiv.registry import ErrorRegistry, ErrorData
+from holodiv.exceptions import RegistryError
 from . import generate_test_array
 
 class TestErrorRegistry:
