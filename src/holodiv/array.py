@@ -521,6 +521,8 @@ class DimensionalArray:
     
     def __len__(self) -> int:
         """Support len() function."""
+        if self.array.ndim == 0:
+            return 1
         return len(self.array)
     
     def __copy__(self):

@@ -121,10 +121,11 @@ def elevate_dimension(reduced_data: np.ndarray,
     eigenvecs = eigenvecs[:, idx]
     
     # Add controlled quantum noise to maintain coherence
-    noise = np.random.normal(0, noise_scale, len(eigenvals))
-    eigenvals = eigenvals + noise
-    eigenvals = np.maximum(eigenvals, 0)  # Ensure positivity after noise
-    eigenvals = eigenvals / np.sum(eigenvals)  # Normalize
+    if not np.isclose(noise_scale, 1.0):
+        noise = np.random.normal(0, noise_scale, len(eigenvals))
+        eigenvals = eigenvals + noise
+        eigenvals = np.maximum(eigenvals, 0)  # Ensure positivity after noise
+        eigenvals = eigenvals / np.sum(eigenvals)  # Normalize
     
     # Reconstruct elevated state
     elevated = np.zeros(np.prod(target_shape), dtype=np.complex128)

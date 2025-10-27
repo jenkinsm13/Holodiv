@@ -29,12 +29,20 @@ class GaugeGroup:
         state = 0.5 * (state + state.conj().T)
         
         # Project onto gauge-invariant subspace
-        for generator in self.generators:
+        if hasattr(self, 'generators'):
+            generators = self.generators
+        else:
+            generators = [self.generator]
+
+        for generator in generators:
             # Compute the commutator [generator, state]
             commutator = generator @ state - state @ generator
             # Subtract the non-invariant part
             state = state - 0.5 * commutator
         
+        # Enforce Hermiticity again after projection
+        state = 0.5 * (state + state.conj().T)
+
         # Normalize the state
         state = state / np.linalg.norm(state)
         return state

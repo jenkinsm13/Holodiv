@@ -14,3 +14,8 @@ def test_numpy_compat_exports_functions_and_constants():
     assert np.allclose(result.array, np.sin(arr.array))
     assert np.isclose(pi, np.pi)
 
+def test_array_function_protocol():
+    """Test the __array_function__ protocol."""
+    arr = array([1, 2, 3])
+    result = np.sum(arr)
+    assert isinstance(result, np.int64)
