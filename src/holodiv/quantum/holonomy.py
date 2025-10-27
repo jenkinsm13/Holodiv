@@ -78,6 +78,35 @@ class HolonomyCalculator:
                     connection[ν] @ connection[μ]
                 )
         return np.max(np.abs(F_μν))
+
+    def _compute_local_transport(self,
+                                 connection: np.ndarray,
+                                 start_point: Tuple[float, ...],
+                                 dx: np.ndarray,
+                                 n_samples: int) -> np.ndarray:
+        """Compute parallel transport over a small path segment."""
+        local_transport = np.eye(self.gauge_group.dimension, dtype=complex)
+        for _ in range(n_samples):
+            # Approximate connection term
+            connection_term = sum(
+                (dx[mu] / n_samples) * connection[mu] for mu in range(len(dx))
+            )
+            step_transport = expm(-1j * connection_term)
+            local_transport = step_transport @ local_transport
+        return local_transport
+
+    def _fixed_path_ordering(self,
+                             connection: np.ndarray,
+                             loop: List[Tuple[float, ...]]) -> np.ndarray:
+        """Implement fixed-step path ordering."""
+        transport = np.eye(self.gauge_group.dimension, dtype=complex)
+        for i in range(len(loop)-1):
+            dx = np.array(loop[i+1]) - np.array(loop[i])
+            local_transport = self._compute_local_transport(
+                connection, loop[i], dx, self._path_ordering_samples
+            )
+            transport = local_transport @ transport
+        return transport
         
     def berry_phase(self, 
                 hamiltonian: Callable[[Tuple[float, ...]], np.ndarray],

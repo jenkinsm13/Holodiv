@@ -207,3 +207,9 @@ class TestErrorRegistry:
                 error_tensor=np.ones((2, 2)),
                 reduction_type='invalid_type'  # Invalid type
             )
+
+    def test_registry_contains(self, registry, sample_error_data):
+        """Test the __contains__ method."""
+        error_id = registry.store(sample_error_data)
+        assert error_id in registry
+        assert 'non-existent' not in registry

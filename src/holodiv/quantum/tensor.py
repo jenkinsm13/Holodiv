@@ -133,12 +133,15 @@ class QuantumTensor:
             
             # Calculate the proper shape for the target dimensions
             total_size = new_data.size
-            dim_size = int(np.ceil(total_size ** (1/target_dims)))
-            new_shape = (dim_size,) * target_dims
+            if target_dims == 0:
+                new_shape = ()
+            else:
+                dim_size = int(np.ceil(total_size ** (1/target_dims)))
+                new_shape = (dim_size,) * target_dims
             
             # Pad the data if necessary
             if np.prod(new_shape) > total_size:
-                padded_data = np.zeros(np.prod(new_shape), dtype=new_data.dtype)
+                padded_data = np.zeros(int(np.prod(new_shape)), dtype=new_data.dtype)
                 padded_data[:total_size] = new_data.flatten()
                 new_data = padded_data
             
@@ -207,7 +210,9 @@ class QuantumTensor:
         
         np.fill_diagonal(reduced_data, self._entanglement_spectrum.schmidt_values[:dominant_dims])
         
-        return QuantumTensor(reduced_data, self.physical_dims[:dominant_dims], self.quantum_nums[:dominant_dims])
+        q_nums = {k: v[:dominant_dims] for k, v in self.quantum_nums.items()} if self.quantum_nums else None
+
+        return QuantumTensor(reduced_data, self.physical_dims[:dominant_dims], q_nums)
     
     def _standard_reduction(self, target_dims: int) -> 'QuantumTensor':
         """Standard dimensional reduction without entanglement preservation."""
@@ -265,7 +270,11 @@ class QuantumTensor:
         state_vector = state_vector / np.linalg.norm(state_vector)
         
         # Determine number of qubits from dimension
-        n_qubits = int(np.log2(len(state_vector)))
+        if len(state_vector) == 0:
+             n_qubits = 0
+        else:
+            n_qubits = int(np.log2(len(state_vector)))
+
         if 2**n_qubits != len(state_vector):
             raise ValueError("Input state dimension must be a power of 2")
             
@@ -298,13 +307,13 @@ class QuantumTensor:
         
         # Create result tensor with proper dimensions
         result_shape = (truncation_idx, truncation_idx)
-        result_data = reduced_state[:truncation_idx, :truncation_idx].reshape(result_shape)
+        result_data = reduced_state[:truncation_idx, :truncation_idx]
         
         # Normalize final state
         result_data = result_data / np.linalg.norm(result_data)
         
         return QuantumTensor(
-            result_data,
+            result_data.reshape(result_shape),
             physical_dims=tuple(range(2)),
             quantum_nums=self.quantum_nums
         )
@@ -338,10 +347,10 @@ class QuantumTensor:
         )
         
         result_shape = (truncation_idx, truncation_idx)
-        result_data = reduced_state.reshape(result_shape)
+        result_data = reduced_state[:truncation_idx, :truncation_idx]
         
         return QuantumTensor(
-            result_data,
+            result_data.reshape(result_shape),
             physical_dims=tuple(range(len(result_shape))),
             quantum_nums=self.quantum_nums
         )

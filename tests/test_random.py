@@ -22,6 +22,11 @@ def test_randint():
     assert a.shape == (3, 3)
     assert np.all(a.array >= 0) and np.all(a.array < 10)
 
+    # Test with only low
+    b = randint(5)
+    assert isinstance(b, hd.DimensionalArray)
+    assert b.array >= 0 and b.array < 5
+
 def test_random():
     a = random((3, 3))
     assert isinstance(a, hd.DimensionalArray)

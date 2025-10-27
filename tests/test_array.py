@@ -2,6 +2,7 @@
 
 import pytest
 import numpy as np
+import holodiv as hd
 from holodiv import array, DimensionalArray
 from holodiv.exceptions import DimensionalError, ReconstructionError
 from . import generate_test_array, assert_array_equal_with_tolerance
@@ -649,3 +650,133 @@ class TestDimensionalArray:
         assert result._error_id is not None
         elevated = result.elevate()
         assert elevated.shape == (2, 2)
+def test_array_creation():
+    """Test DimensionalArray creation with various inputs."""
+    # From numpy array
+    np_arr = np.array([1, 2, 3])
+    hd_arr = hd.array(np_arr)
+    assert isinstance(hd_arr, DimensionalArray)
+
+    # From list
+    list_arr = [1, 2, 3]
+    hd_arr_from_list = hd.array(list_arr)
+    assert isinstance(hd_arr_from_list, DimensionalArray)
+
+    # With dimensions, this is not a feature
+    # hd_arr_dims = hd.array(np_arr, dimensions={'time': 0})
+    # assert hd_arr_dims.dimensions == {'time': 0}
+
+def test_array_properties():
+    """Test properties of DimensionalArray."""
+    arr = hd.array(np.random.rand(2, 3, 4))
+    assert arr.shape == (2, 3, 4)
+    assert arr.ndim == 3
+    assert arr.size == 24
+    assert arr.dtype == np.float64
+
+def test_array_arithmetic():
+    """Test arithmetic operations."""
+    arr1 = hd.array([1, 2, 3])
+    arr2 = hd.array([4, 5, 6])
+
+    # Addition
+    add_res = arr1 + arr2
+    assert np.allclose(add_res.array, [5, 7, 9])
+
+    # Subtraction
+    sub_res = arr1 - arr2
+    assert np.allclose(sub_res.array, [-3, -3, -3])
+
+    # Multiplication
+    mul_res = arr1 * arr2
+    assert np.allclose(mul_res.array, [4, 10, 18])
+
+    # Power
+    pow_res = arr1 ** 2
+    assert np.allclose(pow_res.array, [1, 4, 9])
+
+    # Matmul
+    mat1 = hd.array(np.random.rand(2, 2))
+    mat2 = hd.array(np.random.rand(2, 2))
+    matmul_res = mat1 @ mat2
+    assert matmul_res.shape == (2, 2)
+
+def test_array_slicing_and_indexing():
+    """Test slicing and indexing."""
+    arr = hd.array(np.arange(10))
+
+    # Get item
+    assert arr[5] == 5
+
+    # Set item
+    arr[5] = 100
+    assert arr[5] == 100
+
+    # Slicing
+    slc = arr[2:5]
+    assert isinstance(slc, DimensionalArray)
+    assert np.allclose(slc.array, [2, 3, 4])
+
+def test_array_reduce_methods():
+    """Test reduction methods like sum, mean, etc."""
+    arr = hd.array(np.arange(12).reshape(3, 4))
+
+    # Sum
+    assert arr.sum() == 66
+    assert arr.sum(axis=0).shape == (4,)
+
+    # Mean
+    assert arr.mean() == 5.5
+    assert arr.mean(axis=1).shape == (3,)
+
+    # Std
+    assert isinstance(arr.std(), float)
+
+    # Min/Max
+    assert arr.min() == 0
+    assert arr.max() == 11
+
+def test_array_other_methods():
+    """Test other miscellaneous methods."""
+    arr = hd.array(np.random.rand(2, 3))
+
+    # Transpose
+    assert arr.T.shape == (3, 2)
+
+    # Reshape
+    reshaped = arr.reshape(3, 2)
+    assert reshaped.shape == (3, 2)
+
+    # Flatten
+    assert arr.flatten().shape == (6,)
+
+    # Unary ops
+    assert np.allclose((-arr).array, -arr.array)
+    assert np.allclose(abs(arr).array, abs(arr.array))
+
+def test_array_repr():
+    """Test the __repr__ of DimensionalArray."""
+    arr = hd.array([1, 2, 3])
+    assert "DimensionalArray" in repr(arr)
+
+def test_array_full_coverage():
+    """Tests for full coverage of array.py."""
+    import holodiv as hd
+    import numpy as np
+    from holodiv.array import DimensionalArray
+
+    # Test __array_wrap__ with a scalar result
+    arr = hd.array([1, 2, 3])
+    result = np.mean(arr)
+    assert not isinstance(result, DimensionalArray)
+
+    # Test __truediv__ with non-zero tensor
+    arr2 = hd.array([1, 1, 1])
+    result = arr / arr2
+    assert isinstance(result, DimensionalArray)
+
+    # Test _reconstruct_partial
+    arr = hd.array([1, 2, 3])
+    result = arr / hd.array([1, 0, 1])
+    reconstructed = result.elevate()
+    assert reconstructed.shape == arr.shape
